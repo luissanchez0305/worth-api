@@ -6,5 +6,6 @@ export class User {
     public lastname: string,
     public oneSignal_id: string,
     public isPremium: boolean,
+    public password: string,
   ) {}
 }

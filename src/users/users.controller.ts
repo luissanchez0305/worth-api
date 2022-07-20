@@ -8,6 +8,7 @@ import {
   Patch,
   Param,
   Put,
+  Request,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateDto } from './dto/create.dto';
@@ -21,6 +22,11 @@ export class UsersController {
   @Get()
   findAll(): Promise<SerializedUser[]> {
     return this.usersService.getUsers();
+  }
+
+  @Get('user')
+  getUser(@Request() req) {
+    return this.usersService.getUser(req.email);
   }
 
   @Post()

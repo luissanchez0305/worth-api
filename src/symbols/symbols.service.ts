@@ -48,7 +48,6 @@ export class SymbolsService {
     }
     const newSymbol = this.symbolRepository.create(symbolDto);
     symbolDto.showMarquee = convertToBoolean(symbolDto.showMarquee);
-    console.log('symbolDto.showMarquee', symbolDto.showMarquee);
     return await this.symbolRepository.save(newSymbol);
   }
 

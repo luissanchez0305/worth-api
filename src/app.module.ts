@@ -4,14 +4,19 @@ import { AppController } from './app/app.controller';
 import { AppService } from './app/app.service';
 import { UsersModule } from './users/users.module';
 import entities from './typeorm/index';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { convertToBoolean } from './utils/convertToBoolean';
 import { SymbolsModule } from './symbols/symbols.module';
 import { CurrenciesModule } from './currencies/currencies.module';
+import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      envFilePath: ['.env'],
+      isGlobal: true,
+    }),
+    AuthModule,
     UsersModule,
     SymbolsModule,
     CurrenciesModule,
