@@ -1,22 +1,23 @@
 import { Exclude, Transform } from 'class-transformer';
-import { IsBoolean } from 'class-validator';
+import Decimal from 'decimal.js';
 import { convertToBoolean } from 'src/utils/convertToBoolean';
 
 export interface Signal {
   id: number;
   symbol: string;
   type: string;
-  entryPrice: number;
-  stopLost: number;
+  entryPrice: Decimal;
+  stopLost: Decimal;
   risk: number;
   stopLostReached: boolean;
+  takeProfits: [];
 }
 
 export class SerializedSignal {
   id: number;
   symbol: string;
   type: string;
-  entryPrice: number;
+  entryPrice: Decimal;
 
   constructor(partial: Partial<SerializedSignal>) {
     Object.assign(this, partial);

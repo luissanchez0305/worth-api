@@ -24,20 +24,20 @@ export class SignalsController {
     return this.signalsService.getSignals();
   }
 
-  @Get('signal')
-  getUser(@Request() req) {
-    return this.signalsService.getSignal(req.symbol);
+  @Get(':id')
+  getUser(@Param() params) {
+    return this.signalsService.getSignal(params.id);
   }
 
   @Post()
   @UsePipes(ValidationPipe)
-  create(@Body() signalDto: CreateDto, @Request() res) {
+  create(@Body() signalDto: CreateDto) {
     return this.signalsService.createSignal(signalDto);
   }
 
   @Put()
   @UsePipes(ValidationPipe)
-  update(@Body() signalDto: UpdateDto, @Request() res): any {
+  update(@Body() signalDto: UpdateDto): any {
     try {
       return this.signalsService.updateSignal(signalDto);
     } catch (ex) {

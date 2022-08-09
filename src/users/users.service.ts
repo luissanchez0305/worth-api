@@ -19,7 +19,6 @@ export class UsersService {
   async getUsers() {
     const users = await this.userRepository.find({
       order: {
-        name: 'ASC',
         id: 'DESC',
       },
     });
@@ -28,7 +27,20 @@ export class UsersService {
 
   async createUser(userDto: CreateDto) {
     const newUser = this.userRepository.create(userDto);
-    return await this.userRepository.save(newUser);
+    try {
+      return await this.userRepository.save(newUser);
+    }
+    catch(e) {
+      return e;
+    }
+  }
+
+  async getUserId(id: number) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+    });
+
+    return user;
   }
 
   async getUser(email: string) {

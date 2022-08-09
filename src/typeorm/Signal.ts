@@ -1,5 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { TakeProfit } from './TakeProfit';
+import { DecimalTransformer } from '../utils/decimal.transformer';
+import Decimal from 'decimal.js';
 
 @Entity()
 export class Signal {
@@ -14,11 +16,11 @@ export class Signal {
   @Column()
   type: string;
 
-  @Column()
-  entryPrice: number;
+  @Column('decimal', { precision: 10, scale: 8, transformer: new DecimalTransformer()  })
+  entryPrice: Decimal;
 
-  @Column()
-  stopLost: number;
+  @Column('decimal', { precision: 10, scale: 8, transformer: new DecimalTransformer()  })
+  stopLost: Decimal;
 
   @Column({default: false})
   stopLostReached: boolean;
@@ -34,6 +36,6 @@ export class Signal {
   )
   takeProfits: TakeProfit[];
 
-  @Column()
-  risk: number;
+  @Column('decimal', { precision: 10, scale: 4, transformer: new DecimalTransformer()  })
+  risk: Decimal;
 }

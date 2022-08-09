@@ -1,5 +1,8 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Signal } from './Signal';
+import { DecimalTransformer } from '../utils/decimal.transformer';
+import Decimal from 'decimal.js';
+import { IsDecimal } from 'class-validator';
 
 @Entity()
 export class TakeProfit {
@@ -11,8 +14,9 @@ export class TakeProfit {
   @ManyToOne(() => Signal, (signal) => signal.takeProfits)
   signal: Signal;
 
-  @Column()
-  price: number;
+  @Column('decimal', { precision: 10, scale: 8, transformer: new DecimalTransformer() })
+  @IsDecimal()
+  price: Decimal;
 
   @Column({ default: false })
   takeProfitReached: boolean;

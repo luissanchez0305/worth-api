@@ -21,12 +21,9 @@ export class SignalsService {
   ) {}
 
   async getSignals() {
-    const signals = await this.signalRepository.find({
-      order: {
-        symbol: 'ASC',
-        id: 'DESC',
-      },
-    });
+    const signals = await this.signalRepository.createQueryBuilder("signal")
+    .leftJoinAndSelect("signal.takeProfits", "take_profit")
+    .getMany();
     return signals.map((signal) => new SerializedSignal(signal));
   }
 
@@ -37,12 +34,16 @@ export class SignalsService {
     return signalResponse;
   }
 
-  async getSignal(symbol: string) {
+  async getSignal(id: number) {
     const signal = await this.signalRepository.findOne({
-      where: { symbol },
+      where: { id },
     });
+    const profits = await this.takeProfitRepository.createQueryBuilder("takeProfit")
+      .innerJoin("takeProfit.signal", "tp_signal")
+      .where("tp_signal.id = :id", { id })
+      .getMany()
 
-    return signal;
+    return {signal, profits};
   }
 
   async updateSignal(signalDto: UpdateDto) {

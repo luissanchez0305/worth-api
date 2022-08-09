@@ -24,9 +24,9 @@ export class UsersController {
     return this.usersService.getUsers();
   }
 
-  @Get('user')
-  getUser(@Request() req) {
-    return this.usersService.getUser(req.email);
+  @Get(':id')
+  getUser(@Param() params) {
+    return this.usersService.getUserId(params.id);
   }
 
   @Post()
