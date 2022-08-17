@@ -10,6 +10,7 @@ import { CurrenciesModule } from './currencies/currencies.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { SignalsModule } from './signals/signals.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { SignalsModule } from './signals/signals.module';
     SymbolsModule,
     SignalsModule,
     CurrenciesModule,
+    MessagesModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST,

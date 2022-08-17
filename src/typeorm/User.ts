@@ -21,6 +21,27 @@ export class User {
   @Column()
   lastname: string;
 
+  @Column()
+  phone: string;
+
+  @Column({
+    nullable: true,
+    default: '',
+  })
+  emailCode: string;
+
+  @Column({
+    nullable: true,
+    default: '',
+  })
+  SMSCode: string;
+
+  @Column({
+    nullable: true,
+    default: false,
+  })
+  isValidated: boolean;
+
   @Column({
     nullable: true,
     default: 'NA',
