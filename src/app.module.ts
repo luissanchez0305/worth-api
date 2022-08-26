@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { SignalsModule } from './signals/signals.module';
 import { MessagesModule } from './messages/messages.module';
+import { APIModule } from './api/api.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { MessagesModule } from './messages/messages.module';
     SignalsModule,
     CurrenciesModule,
     MessagesModule,
+    APIModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST,
