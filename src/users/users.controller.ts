@@ -29,10 +29,17 @@ export class UsersController {
     return this.usersService.getUserId(params.id);
   }
 
+  @Get(':id')
+  getUserEmail(@Param() params) {
+    return this.usersService.getUser(params.email);
+  }
+
   @Post()
   @UsePipes(ValidationPipe)
-  create(@Body() userDto: CreateDto) {
-    return this.usersService.createUser(userDto);
+  async create(@Body() userDto: CreateDto) {
+    const res = await this.usersService.createUser(userDto);
+    console.log(res);
+    return res;
   }
 
   @Put()

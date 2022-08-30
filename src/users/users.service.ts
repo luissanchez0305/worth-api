@@ -8,6 +8,7 @@ import { UpdateDto } from './dto/update.dto';
 import { convertToBoolean } from '../utils/convertToBoolean';
 import { randomCodeGenerator } from 'src/utils/randomCodeGenerator';
 import { throwError } from 'rxjs';
+import { MessagesService } from 'src/messages/messages.service';
 const SibApiV3Sdk = require('sib-api-v3-typescript');
 
 @Injectable()
@@ -17,6 +18,7 @@ export class UsersService {
   constructor(
     @InjectRepository(userEntity)
     private readonly userRepository: Repository<userEntity>,
+    private messagesService: MessagesService,
   ) {}
 
   async getUsers() {
@@ -48,7 +50,19 @@ export class UsersService {
     try {
       await apiInstance.createContact(createContact);
       const newUser = this.userRepository.create(userDto);
-      return await this.userRepository.save(newUser);
+      const res = await this.userRepository.save(newUser);
+      await this.updateUserEmailCode(newUser);
+      //this.messagesService.sendEmailCode(newUser);
+      await this.updateUserSMSCode(newUser);
+      this.messagesService
+        .sendSMSCode(newUser)
+        .then((data) => {
+          console.log('SUCCESS SMS', data);
+        })
+        .catch((error) => {
+          console.log('ERROR SMS', error);
+        });
+      return res;
     } catch (e) {
       if (e.response) return e.response.body;
       else return { code: e.code, message: e.sqlMessage };
@@ -76,9 +90,25 @@ export class UsersService {
     return await this.userRepository.save(user);
   }
 
+  async resetEmailCode(user: userEntity) {
+    user.emailCode = '';
+    if (user.SMSCode.length == 0 && user.emailCode.length == 0) {
+      user.isValidated = true;
+    }
+    await this.userRepository.save(user);
+  }
+
   async updateUserSMSCode(user: userEntity) {
     user.SMSCode = randomCodeGenerator();
     return await this.userRepository.save(user);
+  }
+
+  async resetSMSCode(user: userEntity) {
+    user.SMSCode = '';
+    if (user.SMSCode.length == 0 && user.emailCode.length == 0) {
+      user.isValidated = true;
+    }
+    await this.userRepository.save(user);
   }
 
   async updateUser(userDto: UpdateDto) {

@@ -10,5 +10,6 @@ export class User {
     public oneSignal_id: string,
     public isPremium: boolean,
     public password: string,
+    public isValidated: boolean,
   ) {}
 }

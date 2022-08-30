@@ -40,7 +40,10 @@ export class MessagesService {
 
     apiInstance.sendTransacEmail(sendSmtpEmail).then(
       function (data) {
-        console.log('API called successfully. Returned data: ' + data);
+        console.log(
+          'API Email called successfully. Returned data: ' +
+            JSON.stringify(data),
+        );
       },
       function (error) {
         console.error(error);
@@ -49,6 +52,10 @@ export class MessagesService {
   }
 
   async sendSMSCode(user: User) {
+    console.log(
+      'process.env.SENDINBLUE_API_KEY',
+      process.env.SENDINBLUE_API_KEY,
+    );
     const apiInstance = new SibApiV3Sdk.TransactionalSMSApi();
 
     apiInstance.setApiKey(
@@ -60,16 +67,15 @@ export class MessagesService {
     sendTransacSms.sender = 'Worth';
     sendTransacSms.recipient = user.phone;
     sendTransacSms.content = `Codigo de verificacion: ${user.SMSCode}`;
-
-    apiInstance.sendTransacSms(sendTransacSms).then(
-      function (data) {
+    apiInstance
+      .sendTransacSms(sendTransacSms)
+      .then((data) => {
         console.log(
-          'API called successfully. Returned data: ' + JSON.stringify(data),
+          'API SMS called successfully. Returned data: ' + JSON.stringify(data),
         );
-      },
-      function (error) {
+      })
+      .catch(function (error) {
         console.error(error);
-      },
-    );
+      });
   }
 }

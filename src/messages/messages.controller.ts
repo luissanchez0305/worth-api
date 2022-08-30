@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { randomCodeGenerator } from 'src/utils/randomCodeGenerator';
-import { EmailDto } from './dto/email.dto';
+import { ValidateUserDto } from './dto/email.dto';
 import { MessagesService } from './messages.service';
 
 @Controller('messages')
@@ -23,16 +23,36 @@ export class MessagesController {
   ) {}
 
   @Post('email-code')
-  async sendEmailCode(@Body() emailDto: EmailDto) {
+  async sendEmailCode(@Body() emailDto: ValidateUserDto) {
     const user = await this.usersService.getUser(emailDto.email);
     await this.usersService.updateUserEmailCode(user);
     return this.messagesService.sendEmailCode(user);
   }
 
+  @Post('email-code-validate')
+  async validateEmailCode(@Body() emailDto: ValidateUserDto) {
+    const user = await this.usersService.getUser(emailDto.email);
+    if (user.emailCode == emailDto.code) {
+      await this.usersService.resetEmailCode(user);
+      return { valid: true };
+    }
+    return { valid: false };
+  }
+
   @Post('sms-code')
-  async sendSMSCode(@Body() emailDto: EmailDto) {
+  async sendSMSCode(@Body() emailDto: ValidateUserDto) {
     const user = await this.usersService.getUser(emailDto.email);
     await this.usersService.updateUserSMSCode(user);
     return this.messagesService.sendSMSCode(user);
+  }
+
+  @Post('sms-code-validate')
+  async validateSMSCode(@Body() emailDto: ValidateUserDto) {
+    const user = await this.usersService.getUser(emailDto.email);
+    if (user.SMSCode == emailDto.code) {
+      await this.usersService.resetSMSCode(user);
+      return { valid: true };
+    }
+    return { valid: false };
   }
 }
