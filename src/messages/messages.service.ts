@@ -1,12 +1,42 @@
 import { Injectable } from '@nestjs/common';
 import { User } from 'src/users/users.model';
-const SibApiV3Sdk = require('sib-api-v3-typescript');
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { MailgunService } from 'nestjs-mailgun';
+import { MailgunMessageData } from 'nestjs-mailgun';
 
 @Injectable()
 export class MessagesService {
-  constructor() {}
+  constructor(
+    private readonly httpService: HttpService,
+    private mailgunService: MailgunService,
+  ) {}
 
   async sendEmailCode(user: User) {
+    const options: MailgunMessageData = {
+      from: process.env.MAILGUN_USERNAME,
+      to: user.email,
+      subject: 'Test desde mailgun',
+      /* text: `${user.name} ${user.lastname}, Código: ${user.emailCode}`,
+      html: `<h1>Codigo de validacion</h1><p>Hola ${user.name} ${user.lastname},</p><p>Gracias por inscribirte</p>
+        <p>Aqui tienes tu codigo de validación</p><p>Código: ${user.emailCode}</p>`,
+      cc: 'luis@ifesa.tech',
+      bcc: 'luis.sanchez@esferasoluciones.com', */
+      'h:X-Mailgun-Variables': `{"code":${user.emailCode}}`,
+      template: 'valid_email',
+    };
+    this.mailgunService.createEmail(process.env.MAILGUN_DOMAIN, options).then(
+      function (data) {
+        console.log(
+          'API Email called successfully. Returned data: ' +
+            JSON.stringify(data),
+        );
+      },
+      function (error) {
+        console.error(error);
+      },
+    );
+    /* 
     const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
     // Configure API key authorization: api-key
@@ -48,34 +78,33 @@ export class MessagesService {
       function (error) {
         console.error(error);
       },
-    );
+    ); */
   }
 
   async sendSMSCode(user: User) {
-    console.log(
-      'process.env.SENDINBLUE_API_KEY',
-      process.env.SENDINBLUE_API_KEY,
+    const _res = this.httpService.post(
+      'https://nz9p4y.api.infobip.com/sms/2/text/advanced',
+      {
+        messages: [
+          {
+            destinations: [
+              {
+                to: user.phone,
+              },
+            ],
+            from: 'Worth App',
+            text: `Codigo de verificacion: ${user.SMSCode}`,
+          },
+        ],
+      },
+      {
+        headers: {
+          Authorization:
+            'App aef4caa5645501e575f410e392601ecc-f9cdeea3-b9a4-43f2-8c52-c3ee6dffc2b2',
+        },
+      },
     );
-    const apiInstance = new SibApiV3Sdk.TransactionalSMSApi();
-
-    apiInstance.setApiKey(
-      SibApiV3Sdk.TransactionalSMSApiApiKeys.apiKey,
-      process.env.SENDINBLUE_API_KEY,
-    );
-
-    const sendTransacSms = new SibApiV3Sdk.SendTransacSms();
-    sendTransacSms.sender = 'Worth';
-    sendTransacSms.recipient = user.phone;
-    sendTransacSms.content = `Codigo de verificacion: ${user.SMSCode}`;
-    apiInstance
-      .sendTransacSms(sendTransacSms)
-      .then((data) => {
-        console.log(
-          'API SMS called successfully. Returned data: ' + JSON.stringify(data),
-        );
-      })
-      .catch(function (error) {
-        console.error(error);
-      });
+    const res = await firstValueFrom(_res);
+    return res.data;
   }
 }

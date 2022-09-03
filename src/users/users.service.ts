@@ -9,7 +9,7 @@ import { convertToBoolean } from '../utils/convertToBoolean';
 import { randomCodeGenerator } from 'src/utils/randomCodeGenerator';
 import { throwError } from 'rxjs';
 import { MessagesService } from 'src/messages/messages.service';
-const SibApiV3Sdk = require('sib-api-v3-typescript');
+// const SibApiV3Sdk = require('sib-api-v3-typescript');
 
 @Injectable()
 export class UsersService {
@@ -31,7 +31,7 @@ export class UsersService {
   }
 
   async createUser(userDto: CreateDto) {
-    const apiInstance = new SibApiV3Sdk.ContactsApi();
+    /* const apiInstance = new SibApiV3Sdk.ContactsApi();
 
     const apiKey = apiInstance.authentications['apiKey'];
 
@@ -45,14 +45,14 @@ export class UsersService {
       LASTNAME: userDto.lastname,
       SMS: userDto.phone,
     };
-    createContact.listIds = [1];
+    createContact.listIds = [1]; */
 
     try {
-      await apiInstance.createContact(createContact);
+      // await apiInstance.createContact(createContact);
       const newUser = this.userRepository.create(userDto);
       const res = await this.userRepository.save(newUser);
       await this.updateUserEmailCode(newUser);
-      //this.messagesService.sendEmailCode(newUser);
+      this.messagesService.sendEmailCode(newUser);
       await this.updateUserSMSCode(newUser);
       this.messagesService
         .sendSMSCode(newUser)
