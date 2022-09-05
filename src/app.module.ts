@@ -12,6 +12,8 @@ import { ConfigModule } from '@nestjs/config';
 import { SignalsModule } from './signals/signals.module';
 import { MessagesModule } from './messages/messages.module';
 import { APIModule } from './api/api.module';
+import { WebsocketsModule } from './websocket/websocket.module';
+import { WebsocketService } from './websocket/websocket.service';
 
 @Module({
   imports: [
@@ -25,6 +27,7 @@ import { APIModule } from './api/api.module';
     SignalsModule,
     CurrenciesModule,
     MessagesModule,
+    WebsocketsModule,
     APIModule,
     TypeOrmModule.forRoot({
       type: 'mysql',

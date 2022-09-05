@@ -16,26 +16,34 @@ export class Signal {
   @Column()
   type: string;
 
-  @Column('decimal', { precision: 10, scale: 8, transformer: new DecimalTransformer()  })
+  @Column('decimal', {
+    precision: 10,
+    scale: 8,
+    transformer: new DecimalTransformer(),
+  })
   entryPrice: Decimal;
 
-  @Column('decimal', { precision: 10, scale: 8, transformer: new DecimalTransformer()  })
+  @Column('decimal', {
+    precision: 10,
+    scale: 8,
+    transformer: new DecimalTransformer(),
+  })
   stopLost: Decimal;
 
-  @Column({default: false})
+  @Column({ default: false })
   stopLostReached: boolean;
 
-  @OneToMany(
-    type => TakeProfit, 
-    takeProfit => takeProfit.signal, 
-    {
-      cascade: true,
-      onDelete: 'CASCADE',
-      onUpdate:'CASCADE'
-    }
-  )
+  @OneToMany((type) => TakeProfit, (takeProfit) => takeProfit.signal, {
+    cascade: true,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
   takeProfits: TakeProfit[];
 
-  @Column('decimal', { precision: 10, scale: 4, transformer: new DecimalTransformer()  })
+  @Column('decimal', {
+    precision: 10,
+    scale: 4,
+    transformer: new DecimalTransformer(),
+  })
   risk: Decimal;
 }

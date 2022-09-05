@@ -1,5 +1,10 @@
 import { Type } from 'class-transformer';
-import { IsEmail, IsNotEmpty, MinLength, ValidateNested } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
 import { TakeProfit } from 'src/typeorm';
 
 export class CreateDto {
