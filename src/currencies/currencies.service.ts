@@ -9,8 +9,6 @@ import { convertToBoolean } from 'src/utils/convertToBoolean';
 
 @Injectable()
 export class CurrenciesService {
-  currencies: currencyType[] = [];
-
   constructor(
     @InjectRepository(currencyEntity)
     private readonly currencyRepository: Repository<currencyEntity>,

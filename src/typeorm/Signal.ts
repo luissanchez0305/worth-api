@@ -14,6 +14,9 @@ export class Signal {
   symbol: string;
 
   @Column()
+  exchangeSymbol: string;
+
+  @Column()
   type: string;
 
   @Column('decimal', {

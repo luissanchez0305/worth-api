@@ -14,7 +14,11 @@ export class TakeProfit {
   @ManyToOne(() => Signal, (signal) => signal.takeProfits)
   signal: Signal;
 
-  @Column('decimal', { precision: 10, scale: 8, transformer: new DecimalTransformer() })
+  @Column('decimal', {
+    precision: 10,
+    scale: 8,
+    transformer: new DecimalTransformer(),
+  })
   @IsDecimal()
   price: Decimal;
 

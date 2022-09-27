@@ -20,12 +20,18 @@ export class WebsocketController {
 
   @Get('start')
   async startWebsocket(@Request() params) {
-    console.log('start', params.body.symbol);
-    return await this.websocketService.startWebsocket(params.body.symbol);
+    if (params.body.symbol) {
+      return await this.websocketService.startWebsocket(params.body.symbol);
+    } else {
+      return { error: 'include symbol' };
+    }
   }
   @Get('stop')
   async stopWebsocket(@Request() params) {
-    console.log('stop', params.body.symbol);
-    return await this.websocketService.stopWebsocket(params.body.symbol);
+    if (params.body.symbol) {
+      return await this.websocketService.stopWebsocket(params.body.symbol);
+    } else {
+      return { error: 'include symbol' };
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Request, Param } from '@nestjs/common';
 import { SymbolDTO } from './dto/symbol.dto';
 import { APIService } from './api.service';
 
@@ -10,5 +10,24 @@ export class APIController {
   @Get('prices')
   async FinnhubPrices(@Body() symbolDto: SymbolDTO) {
     return this.apiService.getPrices(symbolDto);
+  }
+
+  @Get('symbols')
+  async FinnhubSymbols() {
+    const rest = this.apiService.getAllSymbols();
+    return rest;
+  }
+
+  @Get('symbols/:from')
+  async FinnhubSymbolsFromSearch(@Param() params) {
+    return this.apiService.getSymbol(params.from.toLowerCase());
+  }
+
+  @Get('symbols/:from/:to')
+  async FinnhubSymbolsSearch(@Param() params) {
+    return this.apiService.getSymbol(
+      params.from.toLowerCase(),
+      params.to.toLowerCase(),
+    );
   }
 }

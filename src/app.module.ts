@@ -13,7 +13,7 @@ import { SignalsModule } from './signals/signals.module';
 import { MessagesModule } from './messages/messages.module';
 import { APIModule } from './api/api.module';
 import { WebsocketsModule } from './websocket/websocket.module';
-import { WebsocketService } from './websocket/websocket.service';
+import { SignalSymbolsModule } from './signalSymbol/signalSymbol.module';
 
 @Module({
   imports: [
@@ -28,6 +28,7 @@ import { WebsocketService } from './websocket/websocket.service';
     CurrenciesModule,
     MessagesModule,
     WebsocketsModule,
+    SignalSymbolsModule,
     APIModule,
     TypeOrmModule.forRoot({
       type: 'mysql',

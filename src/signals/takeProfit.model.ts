@@ -1,4 +1,4 @@
-import { Signal } from "src/typeorm";
+import { Signal } from 'src/typeorm';
 import Decimal from 'decimal.js';
 
 export class TakeProfit {

@@ -2,15 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { Symbol as symbolEntity } from './symbols.model';
 import { CreateDto } from './dto/create.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SerializedSymbol, Symbol as symbolType } from './types/index';
+import { SerializedSymbol } from './types/index';
 import { Repository } from 'typeorm';
 import { UpdateDto } from './dto/update.dto';
 import { convertToBoolean } from 'src/utils/convertToBoolean';
 
 @Injectable()
 export class SymbolsService {
-  symbols: symbolType[] = [];
-
   constructor(
     @InjectRepository(symbolEntity)
     private readonly symbolRepository: Repository<symbolEntity>,

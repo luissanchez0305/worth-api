@@ -21,16 +21,17 @@ export class SignalsService {
   ) {}
 
   async getSignals() {
-    const signals = await this.signalRepository.createQueryBuilder("signal")
-    .leftJoinAndSelect("signal.takeProfits", "take_profit")
-    .getMany();
+    const signals = await this.signalRepository
+      .createQueryBuilder('signal')
+      .leftJoinAndSelect('signal.takeProfits', 'take_profit')
+      .getMany();
     return signals.map((signal) => new SerializedSignal(signal));
   }
 
   async createSignal(signalDto: CreateDto) {
     const newSignal = this.signalRepository.create(signalDto);
     const signalResponse = await this.signalRepository.save(newSignal);
-    
+
     return signalResponse;
   }
 
@@ -38,20 +39,22 @@ export class SignalsService {
     const signal = await this.signalRepository.findOne({
       where: { id },
     });
-    const profits = await this.takeProfitRepository.createQueryBuilder("takeProfit")
-      .innerJoin("takeProfit.signal", "tp_signal")
-      .where("tp_signal.id = :id", { id })
-      .getMany()
+    const profits = await this.takeProfitRepository
+      .createQueryBuilder('takeProfit')
+      .innerJoin('takeProfit.signal', 'tp_signal')
+      .where('tp_signal.id = :id', { id })
+      .getMany();
 
-    return {signal, profits};
+    return { signal, profits };
   }
 
   async updateSignal(signalDto: UpdateDto) {
     const signalId = signalDto.id;
-    const profits = await this.takeProfitRepository.createQueryBuilder("takeProfit")
-      .innerJoin("takeProfit.signal", "tp_signal")
-      .where("tp_signal.id = :signalId", { signalId })
-      .getMany()
+    const profits = await this.takeProfitRepository
+      .createQueryBuilder('takeProfit')
+      .innerJoin('takeProfit.signal', 'tp_signal')
+      .where('tp_signal.id = :signalId', { signalId })
+      .getMany();
     const signal = await this.signalRepository.findOne({
       where: { id: signalId },
     });
@@ -62,14 +65,14 @@ export class SignalsService {
       throw new Error('User does not exist');
     }
 
-    profits.forEach(async p => {
-      await this.takeProfitRepository.remove(p)
-    })
+    profits.forEach(async (p) => {
+      await this.takeProfitRepository.remove(p);
+    });
 
-    if(signalDto.takeProfits) {
-      signalDto.takeProfits.forEach(async tp => {
+    if (signalDto.takeProfits) {
+      signalDto.takeProfits.forEach(async (tp) => {
         const { price } = tp;
-        const _tp = new TakeProfit()
+        const _tp = new TakeProfit();
         _tp.price = price;
         _tp.signal = signal;
         await this.takeProfitRepository.save(_tp);
