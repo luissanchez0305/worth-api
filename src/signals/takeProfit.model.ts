@@ -7,5 +7,6 @@ export class TakeProfit {
     public price: Decimal,
     public signal: Signal,
     public takeProfitReached: boolean,
+    public takeProfitReachedDate: Date,
   ) {}
 }

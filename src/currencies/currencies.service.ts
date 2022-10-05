@@ -42,7 +42,7 @@ export class CurrenciesService {
       where: { name: currencyDto.name },
     });
     if (currency) {
-      throw new Error('Currency already not exist');
+      throw new Error('Currency already exists');
     }
     const newCurrency = this.currencyRepository.create(currencyDto);
     currencyDto.isShown = convertToBoolean(currencyDto.isShown);

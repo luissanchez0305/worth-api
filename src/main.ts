@@ -6,11 +6,11 @@ async function bootstrap() {
   let app = await NestFactory.create(AppModule);
   app = app.useGlobalPipes(new ValidationPipe());
   app.enableCors({
-    "origin": "*",
-    "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
-    "preflightContinue": false,
-    "optionsSuccessStatus": 204
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
-  await app.listen(process.env.PLATFORM_PORT);
+  await app.listen(process.env.PORT);
 }
 bootstrap();

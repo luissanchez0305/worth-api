@@ -17,10 +17,16 @@ export class CreateDto {
   @IsNotEmpty()
   entryPrice: number;
 
+  entryPriceReached: boolean;
+
+  entryPriceReachedDate: Date;
+
   @IsNotEmpty()
   stopLost: number;
 
   stopLostReached: boolean;
+
+  stopLostReachedDate: Date;
 
   @IsNotEmpty()
   risk: number;

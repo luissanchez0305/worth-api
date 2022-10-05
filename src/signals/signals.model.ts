@@ -1,5 +1,6 @@
-import { TakeProfit } from "src/typeorm";
+import { SignalLog, TakeProfit } from 'src/typeorm';
 import Decimal from 'decimal.js';
+import { SignalStatus } from 'src/typeorm/Signal';
 
 export class Signal {
   constructor(
@@ -11,6 +12,12 @@ export class Signal {
     public stopLost: Decimal,
     public risk: Decimal,
     public stopLostReached: boolean,
+    public stopLostReachedDate: Date,
+    public entryPriceReached: boolean,
+    public entryPriceReachedDate: Date,
     public takeProfits: TakeProfit[],
+    public status: SignalStatus,
+    public closeReason: string,
+    public logs: SignalLog[],
   ) {}
 }

@@ -15,7 +15,7 @@ export class TakeProfit {
   signal: Signal;
 
   @Column('decimal', {
-    precision: 10,
+    precision: 20,
     scale: 8,
     transformer: new DecimalTransformer(),
   })
@@ -24,4 +24,10 @@ export class TakeProfit {
 
   @Column({ default: false })
   takeProfitReached: boolean;
+
+  @Column({
+    nullable: true,
+    type: 'timestamp',
+  })
+  takeProfitReachedDate: Date;
 }

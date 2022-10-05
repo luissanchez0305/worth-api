@@ -10,20 +10,25 @@ import {
   Put,
   Request,
 } from '@nestjs/common';
-import { UsersService } from 'src/users/users.service';
-import { randomCodeGenerator } from 'src/utils/randomCodeGenerator';
+import { SignalsService } from 'src/signals/signals.service';
 import { WebsocketService } from './websocket.service';
 
 @Controller('websocket')
 export class WebsocketController {
-  constructor(private readonly websocketService: WebsocketService) {}
+  constructor(
+    private readonly websocketService: WebsocketService,
+    private readonly signalService: SignalsService,
+  ) {}
 
   @Get('start')
   async startWebsocket(@Request() params) {
-    if (params.body.symbol) {
-      return await this.websocketService.startWebsocket(params.body.symbol);
+    if (params.body.signalId) {
+      const signalObj = await this.signalService.getSignal(
+        params.body.signalId,
+      );
+      return await this.websocketService.startWebsocket(signalObj);
     } else {
-      return { error: 'include symbol' };
+      return { error: 'include signal' };
     }
   }
   @Get('stop')

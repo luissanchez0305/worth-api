@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { UpdateDto } from './dto/update.dto';
 import { convertToBoolean } from '../utils/convertToBoolean';
 import { TakeProfit } from 'src/typeorm';
+import { UpdateDtoTakeProfit } from './dto/update.takeProfit.dto';
 
 @Injectable()
 export class SignalsService {
@@ -70,16 +71,20 @@ export class SignalsService {
     });
 
     if (signalDto.takeProfits) {
-      signalDto.takeProfits.forEach(async (tp) => {
+      for (const tp of signalDto.takeProfits) {
         const { price } = tp;
         const _tp = new TakeProfit();
         _tp.price = price;
         _tp.signal = signal;
         await this.takeProfitRepository.save(_tp);
-      });
+      }
     }
     signalDto.stopLostReached = convertToBoolean(signalDto.stopLostReached);
-    const { takeProfits, ..._signalDto } = signalDto;
+    const { ..._signalDto } = signalDto;
     return await this.signalRepository.update(signal.id, _signalDto);
+  }
+
+  async updateTakeProfit(takeProfit: UpdateDtoTakeProfit) {
+    return await this.takeProfitRepository.update(takeProfit.id, takeProfit);
   }
 }
