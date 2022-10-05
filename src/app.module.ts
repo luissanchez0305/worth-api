@@ -14,6 +14,7 @@ import { MessagesModule } from './messages/messages.module';
 import { APIModule } from './api/api.module';
 import { WebsocketsModule } from './websocket/websocket.module';
 import { SignalSymbolsModule } from './signalSymbol/signalSymbol.module';
+import { StatusModule } from './status/status.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { SignalSymbolsModule } from './signalSymbol/signalSymbol.module';
     WebsocketsModule,
     SignalSymbolsModule,
     APIModule,
+    StatusModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST,
@@ -41,7 +43,7 @@ import { SignalSymbolsModule } from './signalSymbol/signalSymbol.module';
       synchronize: convertToBoolean(process.env.DB_SYNCRONIZE), //true,
       migrationsRun: true,
       logging: false,
-      ssl: true,
+      ssl: convertToBoolean(process.env.DB_SSL),
     }),
   ],
   controllers: [AppController],
