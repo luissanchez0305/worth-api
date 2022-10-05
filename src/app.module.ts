@@ -43,7 +43,6 @@ import { StatusModule } from './status/status.module';
       synchronize: convertToBoolean(process.env.DB_SYNCRONIZE), //true,
       migrationsRun: true,
       logging: false,
-      ssl: convertToBoolean(process.env.DB_SSL),
     }),
   ],
   controllers: [AppController],
