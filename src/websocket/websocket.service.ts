@@ -164,7 +164,8 @@ export class WebsocketService {
               (signal.type === 'SELL' &&
                 checkProfit.price > price &&
                 previousPrice > checkProfit.price)) &&
-            !checkProfit.takeProfitReached
+            !checkProfit.takeProfitReached &&
+            signal.entryPriceReached
           ) {
             this.signalLogsService.createLog(
               new CreateDto(

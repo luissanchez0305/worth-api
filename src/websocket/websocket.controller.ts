@@ -34,7 +34,12 @@ export class WebsocketController {
   @Get('stop')
   async stopWebsocket(@Request() params) {
     if (params.body.symbol) {
-      return await this.websocketService.stopWebsocket(params.body.symbol);
+      const signalObj = await this.signalService.getSignal(
+        params.body.signalId,
+      );
+      return await this.websocketService.stopWebsocket(
+        signalObj.signal.exchangeSymbol,
+      );
     } else {
       return { error: 'include symbol' };
     }

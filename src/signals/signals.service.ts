@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Signal as signalEntity } from './signals.model';
 import { TakeProfit as takeProfitEntity } from './takeProfit.model';
+import { SignalLog as signalLogEntity } from '../SignalLogs/signalLog.model';
 import { CreateDto } from './dto/create.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SerializedSignal, ToBoolean, Signal } from './types/index';
@@ -19,6 +20,8 @@ export class SignalsService {
     private readonly signalRepository: Repository<signalEntity>,
     @InjectRepository(takeProfitEntity)
     private readonly takeProfitRepository: Repository<takeProfitEntity>,
+    @InjectRepository(signalLogEntity)
+    private readonly signalLogsRepository: Repository<signalLogEntity>,
   ) {}
 
   async getSignals() {
@@ -45,8 +48,15 @@ export class SignalsService {
       .innerJoin('takeProfit.signal', 'tp_signal')
       .where('tp_signal.id = :id', { id })
       .getMany();
+    const logs = await this.signalLogsRepository
+      .createQueryBuilder('signalLog')
+      .where('signalLog.signalId = :id', { id })
+      .orderBy({
+        created_at: 'DESC',
+      })
+      .getMany();
 
-    return { signal, profits };
+    return { signal, profits, logs };
   }
 
   async updateSignal(signalDto: UpdateDto) {
