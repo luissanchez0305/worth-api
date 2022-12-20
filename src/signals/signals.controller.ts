@@ -25,7 +25,7 @@ export class SignalsController {
   }
 
   @Get(':id')
-  getUser(@Param() params) {
+  getSignal(@Param() params) {
     return this.signalsService.getSignal(params.id);
   }
 

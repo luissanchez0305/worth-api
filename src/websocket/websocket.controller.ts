@@ -10,6 +10,7 @@ import {
   Put,
   Request,
 } from '@nestjs/common';
+import { _topicWithOptions } from 'firebase-functions/v1/pubsub';
 import { SignalsService } from 'src/signals/signals.service';
 import { WebsocketService } from './websocket.service';
 
@@ -33,15 +34,22 @@ export class WebsocketController {
   }
   @Get('stop')
   async stopWebsocket(@Request() params) {
-    if (params.body.symbol) {
+    if (params.body.signalId) {
       const signalObj = await this.signalService.getSignal(
         params.body.signalId,
       );
       return await this.websocketService.stopWebsocket(
+        signalObj.signal.id,
         signalObj.signal.exchangeSymbol,
       );
     } else {
       return { error: 'include symbol' };
     }
   }
+
+  @Get('price/:symbol')
+  async getSymbolPrice(@Param() params) {
+    return await this.websocketService.getSymbolPrice(params.symbol);
+  }
+
 }

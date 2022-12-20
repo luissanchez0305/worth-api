@@ -1,5 +1,4 @@
 import { IsNotEmpty } from 'class-validator';
-import { TakeProfit } from 'src/typeorm';
 import { SignalStatus } from 'src/typeorm/Signal';
 import { Signal } from '../signals.model';
 import { CreateDto } from './create.dto';

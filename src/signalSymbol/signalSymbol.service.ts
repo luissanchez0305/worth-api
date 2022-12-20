@@ -4,7 +4,6 @@ import { CreateDto } from './dto/create.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SerializedCurrency } from './types/index';
 import { Repository } from 'typeorm';
-import { UpdateDto } from './dto/update.dto';
 
 @Injectable()
 export class SignalSymbolsService {
@@ -51,9 +50,9 @@ export class SignalSymbolsService {
     return await this.signalSymbolsRepository.save(newSymbol);
   }
 
-  async updateSymbol(symbolDto: UpdateDto) {
+  async updateSymbol(symbolDto: CreateDto) {
     const currency = await this.signalSymbolsRepository.findOne({
-      where: { id: symbolDto.id },
+      where: { symbol: symbolDto.symbol },
     });
     if (!currency) {
       throw new Error('Currency does not exist');

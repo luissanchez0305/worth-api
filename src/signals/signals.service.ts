@@ -1,27 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { Signal as signalEntity } from './signals.model';
-import { TakeProfit as takeProfitEntity } from './takeProfit.model';
-import { SignalLog as signalLogEntity } from '../SignalLogs/signalLog.model';
+import { Signal as signalModel } from './signals.model';
+import { TakeProfit as takeProfitModel } from './takeProfit.model';
+import { SignalLog as signalLogModel } from '../SignalLogs/signalLog.model';
 import { CreateDto } from './dto/create.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SerializedSignal, ToBoolean, Signal } from './types/index';
 import { Repository } from 'typeorm';
 import { UpdateDto } from './dto/update.dto';
 import { convertToBoolean } from '../utils/convertToBoolean';
-import { TakeProfit } from 'src/typeorm';
+import { Signal as signalEntity, TakeProfit } from 'src/typeorm';
 import { UpdateDtoTakeProfit } from './dto/update.takeProfit.dto';
+import { getCurrentUTC } from 'src/utils/date';
+import { SignalStatus } from 'src/typeorm/Signal';
 
 @Injectable()
 export class SignalsService {
   signals: Signal[] = [];
 
   constructor(
-    @InjectRepository(signalEntity)
-    private readonly signalRepository: Repository<signalEntity>,
-    @InjectRepository(takeProfitEntity)
-    private readonly takeProfitRepository: Repository<takeProfitEntity>,
-    @InjectRepository(signalLogEntity)
-    private readonly signalLogsRepository: Repository<signalLogEntity>,
+    @InjectRepository(signalModel)
+    private readonly signalRepository: Repository<signalModel>,
+    @InjectRepository(takeProfitModel)
+    private readonly takeProfitRepository: Repository<takeProfitModel>,
+    @InjectRepository(signalLogModel)
+    private readonly signalLogsRepository: Repository<signalLogModel>,
   ) {}
 
   async getSignals() {
@@ -56,7 +58,44 @@ export class SignalsService {
       })
       .getMany();
 
-    return { signal, profits, logs };
+    signal.logs = logs;
+    signal.takeProfits = profits;
+    return { signal };
+  }
+
+  async updateEntryPriceReached(
+    signalId: number,
+    value: boolean,
+    status: SignalStatus,
+  ) {
+    return await this.signalRepository
+      .createQueryBuilder()
+      .update(signalEntity)
+      .set({
+        entryPriceReached: value,
+        entryPriceReachedDate: getCurrentUTC(),
+        status,
+      })
+      .where('id = :id', { id: signalId })
+      .execute();
+  }
+
+  async updateStopLostReached(
+    signalId: number,
+    value: boolean,
+    status: SignalStatus,
+  ) {
+    return await this.signalRepository
+      .createQueryBuilder()
+      .update(signalEntity)
+      .set({
+        stopLostReached: value,
+        stopLostReachedDate: getCurrentUTC(),
+        status,
+        closeReason: 'reached stop lost',
+      })
+      .where('id = :id', { id: signalId })
+      .execute();
   }
 
   async updateSignal(signalDto: UpdateDto) {
@@ -69,6 +108,7 @@ export class SignalsService {
     const signal = await this.signalRepository.findOne({
       where: { id: signalId },
     });
+
     /* {
       where: { id: signalDto.id },
     }); */

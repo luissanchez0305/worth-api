@@ -8,6 +8,7 @@ import { SymbolDto } from './dto/symbol.dto';
 import * as WebSocket from 'ws';
 import { SignalSymbolsService } from 'src/signalSymbol/signalSymbol.service';
 import Decimal from 'decimal.js';
+import { SymbolData } from './types';
 import { Signal } from 'src/signals/signals.model';
 import { TakeProfit } from 'src/signals/takeProfit.model';
 import { SignalsService } from 'src/signals/signals.service';
@@ -25,162 +26,181 @@ export class WebsocketService {
     private readonly signalsService: SignalsService,
     private readonly signalLogsService: SignalLogsService,
   ) {}
-  private ws = new WebSocket(
-    `wss://ws.finnhub.io?token=${process.env.FINNHUB_KEY}`,
-  );
+  private symbols: SymbolData[] = [];
+  public websockets: { id: number; ws: WebSocket }[] = [];
 
-  async startWebsocket(signalObj: { signal: Signal; profits: TakeProfit[] }) {
-    let previousPrice: Decimal;
-    const { signal, profits } = signalObj;
-
-    this.signalLogsService.createLog(
-      new CreateDto(signal, 'signal has started'),
+  async startWebsocket(signalObj: { signal: Signal }) {
+    const localWS = new WebSocket(
+      `wss://ws.finnhub.io?token=${process.env.FINNHUB_KEY}`,
     );
 
-    const checkProfits = profits
-      .sort((a: TakeProfit, b: TakeProfit) =>
-        (signal.type === 'BUY' ? a.price < b.price : a.price > b.price)
-          ? -1
-          : 1,
-      )
-      .filter((tp) => !tp.takeProfitReached);
-    if (!checkProfits.length) {
-      console.log('Error no "take profit" found');
-      return;
-    }
-    let checkProfit = checkProfits[0];
+    const { signal } = signalObj;
+    localWS.onopen = () => {
+      const checkProfits = signal.takeProfits
+        .sort((a: TakeProfit, b: TakeProfit) =>
+          (signal.type === 'BUY' ? a.price < b.price : a.price > b.price)
+            ? -1
+            : 1,
+        )
+        .filter((tp) => !tp.takeProfitReached);
+      if (!checkProfits.length) {
+        console.log('Error no "take profit" found');
+        return;
+      }
+      const checkProfit = checkProfits[0];
 
-    console.log('signal', signalObj);
-    this.ws.send(
-      JSON.stringify({
-        type: 'subscribe',
-        symbol: signalObj.signal.exchangeSymbol,
-      }),
-      (obj) => {
-        console.log('response', obj);
-      },
-    );
+      console.log(
+        'ws',
+        this.websockets.map((w) => {
+          return { id: w.id, state: w.ws.readyState };
+        }),
+      );
+      localWS.send(
+        JSON.stringify({
+          type: 'subscribe',
+          symbol: signalObj.signal.exchangeSymbol,
+        }),
+        () => {
+          this.symbols.push({
+            symbol: signalObj.signal.exchangeSymbol,
+            signal: signalObj.signal,
+            checkProfit,
+            takeProfits: signal.takeProfits,
+            previousPrice: new Decimal(0),
+          });
+          this.signalLogsService.createLog(
+            new CreateDto(signal, 'signal has started'),
+          );
+        },
+      );
+
+      /* localWS
+        .on('open', (event, isBinary) => {
+          const open = isBinary ? event : event.toString();
+          const _data = JSON.parse(open.toString()).data;
+          console.log('websocket open', _data);
+        })
+        */
+    };
 
     const signalSymbolsS = this.signalSymbolsService;
-    let signalSymbol = await this.signalSymbolsService.getSymbol(
-      signalObj.signal.exchangeSymbol,
-    );
-
-    if (!signalSymbol) {
-      signalSymbol = await this.signalSymbolsService.createSymbol({
-        symbol: signalObj.signal.exchangeSymbol,
-        price: 0,
+    this.signalSymbolsService
+      .getSymbol(signalObj.signal.exchangeSymbol)
+      .then(async (signalSymbol) => {
+        if (!signalSymbol) {
+          signalSymbol = await this.signalSymbolsService.createSymbol({
+            symbol: signalObj.signal.exchangeSymbol,
+            price: 0,
+          });
+        }
       });
-    }
 
-    this.ws
-      .on('open', (event, isBinary) => {
-        const open = isBinary ? event : event.toString();
-        const _data = JSON.parse(open.toString()).data;
-        console.log('websocket open', _data);
-      })
-      .on('message', (event, isBinary) => {
-        const message = isBinary ? event : event.toString();
-        // search for symbol is exists update the price
-        // if doesn't exist create the signal symbol
-        const _data = JSON.parse(message.toString()).data;
-        if (_data) {
-          const data = _data[_data.length - 1];
-          const date = new Date(data.t);
-          const price = new Decimal(data.p);
+    localWS.onerror = (event) => {
+      console.log('websocket error', event);
+    };
 
+    localWS.onclose = (event) => {
+      console.log('websocket close', event, new Date());
+    };
+
+    localWS.onmessage = (event) => {
+      // search for symbol is exists update the price
+      // if doesn't exist create the signal symbol
+      const _data = JSON.parse(event.data.toString()).data;
+      if (_data) {
+        const data = _data[_data.length - 1];
+
+        const { date = new Date(data.t), price = new Decimal(data.p) } = data;
+
+        const symbol = this.symbols.find((item) => item.symbol == data.s);
+        if (symbol) {
           // CHECK FOR STOP LOST
           if (
-            ((signal.type === 'BUY' &&
-              signal.stopLost > price &&
-              previousPrice > signal.stopLost) ||
-              (signal.type === 'SELL' &&
-                signal.stopLost < price &&
-                previousPrice < signal.stopLost)) &&
-            !signal.stopLostReached
+            ((symbol.signal.type === 'BUY' &&
+              symbol.signal.stopLost > price &&
+              symbol.previousPrice > symbol.signal.stopLost) ||
+              (symbol.signal.type === 'SELL' &&
+                symbol.signal.stopLost < price &&
+                symbol.previousPrice < symbol.signal.stopLost)) &&
+            !symbol.signal.stopLostReached
           ) {
             // modifica signal stop lost
-            signal.stopLostReached = true;
-            signal.stopLostReachedDate = getCurrentUTC();
-            signal.status = SignalStatus.Deactivated;
-            signal.closeReason = 'reached stop lost';
-            const signalUpdate = new UpdateDto(signal);
-            signalUpdate.takeProfits = profits;
+            this.signalsService.updateStopLostReached(
+              symbol.signal.id,
+              true,
+              SignalStatus.Deactivated,
+            );
 
             this.signalLogsService.createLog(
               new CreateDto(signal, 'it have reach stop lost. closing signal'),
             );
 
-            console.log(
-              'take profits en signalUpdate',
-              signalUpdate.takeProfits,
-            );
-            this.signalsService.updateSignal(signalUpdate);
+            symbol.signal.stopLostReached = true;
+            symbol.signal.status = SignalStatus.Deactivated;
+
             // TODO enviar notificacion
             console.log(
               '----------- envia notificacion stop lost',
               signal.stopLost,
               price,
             );
-            this.stopWebsocket(signal.exchangeSymbol);
+            this.stopWebsocket(symbol.signal.id, symbol.signal.exchangeSymbol);
           }
           // CHECK FOR ENTRY PRICE
           else if (
-            ((signal.type === 'BUY' &&
-              signal.entryPrice > price &&
-              previousPrice > signal.entryPrice) ||
-              (signal.type === 'SELL' &&
-                signal.entryPrice < price &&
-                previousPrice < signal.entryPrice)) &&
-            !signal.entryPriceReached
+            ((symbol.signal.type === 'BUY' &&
+              symbol.signal.entryPrice > price &&
+              symbol.previousPrice > symbol.signal.entryPrice) ||
+              (symbol.signal.type === 'SELL' &&
+                symbol.signal.entryPrice < price &&
+                symbol.previousPrice < symbol.signal.entryPrice)) &&
+            !symbol.signal.entryPriceReached
           ) {
             // modifica signal entry price
-            signal.entryPriceReached = true;
-            signal.entryPriceReachedDate = getCurrentUTC();
-            signal.status = SignalStatus.EntryPriceReached;
-            const signalUpdate = new UpdateDto(signal);
-            signalUpdate.takeProfits = profits;
-            console.log(
-              'take profits en signalUpdate',
-              signalUpdate.takeProfits,
+            this.signalsService.updateEntryPriceReached(
+              symbol.signal.id,
+              true,
+              SignalStatus.EntryPriceReached,
             );
-            this.signalsService.updateSignal(signalUpdate);
 
             this.signalLogsService.createLog(
               new CreateDto(signal, 'it have reach entry price'),
             );
 
+            symbol.signal.entryPriceReached = true;
+            symbol.signal.status = SignalStatus.EntryPriceReached;
+
             console.log(
               `------------ envia notificacion entry price ${signal.entryPrice}`,
-              signal.entryPrice,
+              data.s,
               price,
             );
           }
           // CHECK FOR TAKE PROFIT
           else if (
-            ((signal.type === 'BUY' &&
-              checkProfit.price < price &&
-              previousPrice < checkProfit.price) ||
-              (signal.type === 'SELL' &&
-                checkProfit.price > price &&
-                previousPrice > checkProfit.price)) &&
-            !checkProfit.takeProfitReached &&
-            signal.entryPriceReached
+            ((symbol.signal.type === 'BUY' &&
+              symbol.checkProfit.price < price &&
+              symbol.previousPrice < symbol.checkProfit.price) ||
+              (symbol.signal.type === 'SELL' &&
+                symbol.checkProfit.price > price &&
+                symbol.previousPrice > symbol.checkProfit.price)) &&
+            !symbol.checkProfit.takeProfitReached &&
+            symbol.signal.entryPriceReached
           ) {
             this.signalLogsService.createLog(
               new CreateDto(
-                signal,
-                `it have reach take profit ${checkProfit.price}`,
+                symbol.signal,
+                `it have reach take profit ${symbol.checkProfit.price}`,
               ),
             );
 
-            checkProfit.takeProfitReached = true;
-            checkProfit.takeProfitReachedDate = getCurrentUTC();
-            const _takeProfit = new UpdateDtoTakeProfit(checkProfit);
+            symbol.checkProfit.takeProfitReached = true;
+            symbol.checkProfit.takeProfitReachedDate = getCurrentUTC();
+            const _takeProfit = new UpdateDtoTakeProfit(symbol.checkProfit);
             console.log('take profit alcanzado', _takeProfit);
             this.signalsService.updateTakeProfit(_takeProfit);
 
-            const checkProfits = profits
+            const checkProfits = symbol.takeProfits
               .sort((a: TakeProfit, b: TakeProfit) =>
                 (signal.type === 'BUY' ? a.price < b.price : a.price > b.price)
                   ? -1
@@ -190,48 +210,62 @@ export class WebsocketService {
 
             // si ya no hay take profits cerrar la señal
             if (!checkProfits.length) {
-              signal.status = SignalStatus.Deactivated;
-              signal.closeReason = 'no more take profits';
-              const signalUpdate = new UpdateDto(signal);
-              signalUpdate.takeProfits = profits;
+              symbol.signal.status = SignalStatus.Deactivated;
+              symbol.signal.closeReason = 'no more take profits';
+              const signalUpdate = new UpdateDto(symbol.signal);
+              signalUpdate.takeProfits = symbol.takeProfits;
               this.signalsService.updateSignal(signalUpdate);
-              this.stopWebsocket(signal.exchangeSymbol);
+              this.stopWebsocket(signal.id, signal.exchangeSymbol);
 
               this.signalLogsService.createLog(
                 new CreateDto(signal, `no more take profit. closing signal`),
               );
             } else {
-              checkProfit = checkProfits[0];
+              symbol.checkProfit = checkProfits[0];
 
               // TODO enviar notificacion
               console.log(
                 `--------- envia notificacion take profit`,
-                checkProfit.price,
+                symbol.checkProfit.price,
                 price,
               );
             }
           }
 
-          if (date.getUTCSeconds() % 5 === 0) {
+          if (date.getUTCSeconds() % 2 === 0) {
             signalSymbolsS.updateSymbol({
-              id: signalSymbol.id,
-              symbol: signal.exchangeSymbol,
+              symbol: data.s,
               price: data.p,
             });
           }
-          previousPrice = price;
+          symbol.previousPrice = price;
         }
-      })
-      .on('error', (event) => {
-        console.log('websocket error', event);
-      })
-      .on('close', (event) => {
-        console.log('websocket close', event);
-      });
+      }
+    };
+
+    this.websockets.push({ id: signal.id, ws: localWS });
   }
 
-  async stopWebsocket(symbol: string) {
+  async stopWebsocket(wsId: number, symbol: string) {
     console.log('stop', symbol);
-    this.ws.send(JSON.stringify({ type: 'unsubscribe', symbol: symbol }));
+    const websocket = this.websockets.find((w) => w.id === wsId);
+
+    websocket.ws.send(JSON.stringify({ type: 'unsubscribe', symbol: symbol }));
+
+    this.websockets = this.websockets.filter((w) => w.id !== wsId);
+    this.symbols = this.symbols.filter((s) => s.symbol !== symbol);
+
+    console.log(
+      'ws',
+      this.websockets.map((w) => {
+        return { id: w.id, state: w.ws.readyState };
+      }),
+    );
+  }
+
+  async getSymbolPrice(symbol: string): Promise<Decimal>{
+    const _symbol = await this.signalSymbolsService.getSymbol(symbol);
+
+    return _symbol.price;
   }
 }

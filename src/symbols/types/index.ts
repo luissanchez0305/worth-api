@@ -1,11 +1,3 @@
-export interface Symbol {
-  id: number;
-  from: string;
-  to: string;
-  type: string;
-  showMarquee: boolean;
-}
-
 export class SerializedSymbol {
   id: number;
   from: string;
