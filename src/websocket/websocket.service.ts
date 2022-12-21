@@ -263,7 +263,7 @@ export class WebsocketService {
     );
   }
 
-  async getSymbolPrice(symbol: string): Promise<Decimal>{
+  async getSymbolPrice(symbol: string): Promise<Decimal> {
     const _symbol = await this.signalSymbolsService.getSymbol(symbol);
 
     return _symbol.price;

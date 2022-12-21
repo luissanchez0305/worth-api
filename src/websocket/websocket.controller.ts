@@ -51,5 +51,4 @@ export class WebsocketController {
   async getSymbolPrice(@Param() params) {
     return await this.websocketService.getSymbolPrice(params.symbol);
   }
-
 }

@@ -23,7 +23,6 @@ export class SymbolsController {
 
   @Get('active')
   findAllActive(): Promise<SerializedSymbol[]> {
-    console.log('active');
     return this.symbolsService.getAllActiveSymbols();
   }
 
