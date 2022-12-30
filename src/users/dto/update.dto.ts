@@ -1,8 +1,8 @@
-import { IsBoolean, IsNotEmpty } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 import { ToBoolean } from '../types';
-import { CreateDto } from './create.dto';
+import { SimpleDto } from './simple.dto';
 
-export class UpdateDto extends CreateDto {
+export class UpdateDto extends SimpleDto {
   oneSignal_id: string;
 
   @IsNotEmpty()

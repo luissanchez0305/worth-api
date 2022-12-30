@@ -1,21 +1,7 @@
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import { SimpleDto } from './simple.dto';
 
-export class CreateDto {
-  @IsNotEmpty()
-  @IsEmail()
-  email: string;
-
-  @IsNotEmpty()
-  @MinLength(2)
-  name: string;
-
-  @IsNotEmpty()
-  @MinLength(2)
-  lastname: string;
-
-  @IsNotEmpty()
-  phone: string;
-
+export class CreateDto extends SimpleDto {
   @IsNotEmpty()
   @MinLength(10, {
     message:

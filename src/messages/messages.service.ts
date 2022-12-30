@@ -99,8 +99,7 @@ export class MessagesService {
       },
       {
         headers: {
-          Authorization:
-            'App aef4caa5645501e575f410e392601ecc-f9cdeea3-b9a4-43f2-8c52-c3ee6dffc2b2',
+          Authorization: `App ${process.env.INFOBIT_API_KEY}`,
         },
       },
     );

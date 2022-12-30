@@ -9,6 +9,7 @@ import {
   Param,
   Put,
   Request,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateDto } from './dto/create.dto';
@@ -29,7 +30,7 @@ export class UsersController {
     return this.usersService.getUserId(params.id);
   }
 
-  @Get(':id')
+  @Get('/email/:email')
   getUserEmail(@Param() params) {
     return this.usersService.getUser(params.email);
   }
@@ -38,15 +39,17 @@ export class UsersController {
   @UsePipes(ValidationPipe)
   async create(@Body() userDto: CreateDto) {
     const res = await this.usersService.createUser(userDto);
-    console.log(res);
     return res;
   }
 
-  @Put()
+  @Put(':email')
   @UsePipes(ValidationPipe)
-  update(@Body() userDto: UpdateDto): any {
+  update(
+    @Body() userDto: UpdateDto,
+    @Param('email') currentEmail: string,
+  ): any {
     try {
-      return this.usersService.updateUser(userDto);
+      return this.usersService.updateUser(userDto, currentEmail);
     } catch (ex) {
       return { error: ex };
     }

@@ -22,7 +22,7 @@ export class MessagesController {
     private readonly usersService: UsersService,
   ) {}
 
-  @Post('email-code')
+  @Post('email-code-send')
   async sendEmailCode(@Body() emailDto: ValidateUserDto) {
     const user = await this.usersService.getUser(emailDto.email);
     await this.usersService.updateUserEmailCode(user);
@@ -39,7 +39,7 @@ export class MessagesController {
     return { valid: false };
   }
 
-  @Post('sms-code')
+  @Post('sms-code-send')
   async sendSMSCode(@Body() emailDto: ValidateUserDto) {
     const user = await this.usersService.getUser(emailDto.email);
     await this.usersService.updateUserSMSCode(user);
@@ -47,9 +47,9 @@ export class MessagesController {
   }
 
   @Post('sms-code-validate')
-  async validateSMSCode(@Body() emailDto: ValidateUserDto) {
-    const user = await this.usersService.getUser(emailDto.email);
-    if (user.SMSCode == emailDto.code) {
+  async validateSMSCode(@Body() validateDto: ValidateUserDto) {
+    const user = await this.usersService.getUser(validateDto.email);
+    if (user.SMSCode == validateDto.code) {
       await this.usersService.resetSMSCode(user);
       return { valid: true };
     }

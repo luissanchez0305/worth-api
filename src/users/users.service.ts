@@ -111,14 +111,22 @@ export class UsersService {
     await this.userRepository.save(user);
   }
 
-  async updateUser(userDto: UpdateDto) {
+  async updateUser(userDto: UpdateDto, currentEmail: string) {
     const user = await this.userRepository.findOne({
-      where: { email: userDto.email },
+      where: { email: currentEmail },
     });
     if (!user) {
       throw new Error('User does not exist');
     }
+
     userDto.isPremium = convertToBoolean(userDto.isPremium);
-    return this.userRepository.update(user.id, userDto);
+
+    this.userRepository.update(user.id, userDto).then(async () => {
+      if (userDto.email !== currentEmail) {
+        user.email = userDto.email;
+        await this.updateUserEmailCode(user);
+        this.messagesService.sendEmailCode(user);
+      }
+    });
   }
 }
