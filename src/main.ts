@@ -11,7 +11,7 @@ async function bootstrap() {
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
-  const hostPort = process.env.PORT || 8080;
+  const hostPort = parseInt(process.env.PORT) || 8080;
   await app.listen(hostPort);
 
   console.log('Listening on port %d', hostPort);
