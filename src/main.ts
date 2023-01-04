@@ -11,10 +11,10 @@ async function bootstrap() {
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
-  const server_port = process.env.YOUR_PORT || process.env.HOST_PORT || 8080;
-  app.listen(server_port, () => {
-    console.log('Listening on port %d', server_port);
-  });
+  const hostPort = process.env.PORT || 8080;
+  await app.listen(hostPort);
+
+  console.log('Listening on port %d', hostPort);
 }
 
 bootstrap();
