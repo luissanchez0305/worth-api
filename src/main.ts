@@ -12,8 +12,7 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
   const server_port = process.env.YOUR_PORT || process.env.HOST_PORT || 8080;
-  const server_host = process.env.YOUR_HOST || '0.0.0.0';
-  app.listen(server_port, server_host, () => {
+  app.listen(server_port, () => {
     console.log('Listening on port %d', server_port);
   });
 }
