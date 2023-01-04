@@ -95,6 +95,7 @@
     "testEnvironment": "node"
   },
   "engines": {
-    "node": "16.16.0"
+    "node": "16.16.0",
+    "npm": "8.16.0"
   }
 }
