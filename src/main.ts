@@ -12,7 +12,7 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
   const port = process.env.HOST_PORT || 8080;
-  await app.listen(port);
-  console.log('HOST_PORT', port);
+  const server = await app.listen(port);
+  console.log('server', server._connectionKey);
 }
 bootstrap();
