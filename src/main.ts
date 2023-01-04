@@ -11,7 +11,7 @@ async function bootstrap() {
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
-  const port = process.env.HOST_PORT || 8080;
+  const port = process.env.HOST_PORT || 5000;
   const server = await app.listen(port);
   console.log('server', server._connectionKey);
 }
