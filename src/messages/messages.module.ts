@@ -6,6 +6,7 @@ import { User } from 'src/typeorm';
 import { UsersService } from 'src/users/users.service';
 import { MailgunModule } from 'nestjs-mailgun';
 import { HttpModule } from '@nestjs/axios';
+import { APIService } from 'src/api/api.service';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { HttpModule } from '@nestjs/axios';
     }),
   ],
   controllers: [MessagesController],
-  providers: [MessagesService, UsersService],
+  providers: [MessagesService, UsersService, APIService],
   exports: [MessagesService],
 })
 export class MessagesModule {}

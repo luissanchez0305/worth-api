@@ -15,6 +15,7 @@ import { UsersService } from './users.service';
 import { CreateDto } from './dto/create.dto';
 import { SerializedUser } from './types/index';
 import { UpdateDto } from './dto/update.dto';
+import { DeviceDataDto } from 'src/api/dto/deviceDataDto.dto';
 
 @Controller('users')
 export class UsersController {
@@ -53,5 +54,10 @@ export class UsersController {
     } catch (ex) {
       return { error: ex };
     }
+  }
+
+  @Post('send-device-data')
+  async sendDeviceData(@Body() deviceDataDto: DeviceDataDto) {
+    return this.usersService.sendDeviceData(deviceDataDto);
   }
 }

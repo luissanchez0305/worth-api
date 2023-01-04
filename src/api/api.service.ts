@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { firstValueFrom, merge, zip } from 'rxjs';
 import { map, mapTo } from 'rxjs/operators';
+import { NotificationDto } from 'src/messages/dto/notificationDto';
 import { SymbolDTO } from './dto/symbol.dto';
 
 @Injectable()
@@ -53,5 +54,23 @@ export class APIService {
         item.symbol.toLowerCase().indexOf(`${from}${to}`) > -1 ||
         item.symbol.toLowerCase().indexOf(`${from}_${to}`) > -1,
     );
+  }
+
+  async sendPushNotification(notificacionDto: NotificationDto) {
+    const message = {
+      to: notificacionDto.token,
+      sound: notificacionDto.sound,
+      title: notificacionDto.title,
+      body: notificacionDto.body,
+      // data: { someData: 'goes here' },
+    };
+
+    const _res = this.httpService.post(
+      'https://exp.host/--/api/v2/push/send',
+      message,
+    );
+
+    const res = await firstValueFrom(_res);
+    return res.data;
   }
 }

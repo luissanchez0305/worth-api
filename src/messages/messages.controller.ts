@@ -11,15 +11,18 @@ import {
   Request,
 } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
+import { APIService } from 'src/api/api.service';
 import { randomCodeGenerator } from 'src/utils/randomCodeGenerator';
 import { ValidateUserDto } from './dto/email.dto';
 import { MessagesService } from './messages.service';
+import { NotificationDto } from './dto/notificationDto';
 
 @Controller('messages')
 export class MessagesController {
   constructor(
     private readonly messagesService: MessagesService,
     private readonly usersService: UsersService,
+    private readonly apiService: APIService,
   ) {}
 
   @Post('email-code-send')
@@ -54,5 +57,10 @@ export class MessagesController {
       return { valid: true };
     }
     return { valid: false };
+  }
+
+  @Post('send-push-notfication')
+  async sendPushNotification(@Body() notificationDto: NotificationDto) {
+    return await this.apiService.sendPushNotification(notificationDto);
   }
 }

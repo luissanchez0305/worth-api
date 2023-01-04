@@ -9,6 +9,7 @@ import { convertToBoolean } from '../utils/convertToBoolean';
 import { randomCodeGenerator } from 'src/utils/randomCodeGenerator';
 import { throwError } from 'rxjs';
 import { MessagesService } from 'src/messages/messages.service';
+import { DeviceDataDto } from 'src/api/dto/deviceDataDto.dto';
 // const SibApiV3Sdk = require('sib-api-v3-typescript');
 
 @Injectable()
@@ -128,5 +129,14 @@ export class UsersService {
         this.messagesService.sendEmailCode(user);
       }
     });
+  }
+
+  async sendDeviceData(deviceData: DeviceDataDto) {
+    console.log(
+      'deviceData',
+      deviceData.deviceId,
+      deviceData.deviceName,
+      deviceData.userId,
+    );
   }
 }
