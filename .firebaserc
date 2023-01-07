@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "worth-b019d"
-  }
+    "default": "worth-72864",
+    "dev": "worth-72864"
+  },
+  "targets": {},
+  "etags": {}
 }

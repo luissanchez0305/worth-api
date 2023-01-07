@@ -10,7 +10,6 @@ import {
   Put,
   Request,
 } from '@nestjs/common';
-import { _topicWithOptions } from 'firebase-functions/v1/pubsub';
 import { SignalsService } from 'src/signals/signals.service';
 import { WebsocketService } from './websocket.service';
 
