@@ -20,12 +20,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "build:watch": "tsc --watch",
-    "serve": "npm run build && firebase emulators:start --only functions",
-    "shell": "npm run build && firebase functions:shell",
-    "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log",
-    "build:digitalOcean": "yarn install --production=false && rimraf dist && yarn build && yarn install --production --frozen-lockfile"
+    "build:watch": "tsc --watch"
   },
   "dependencies": {
     "@nestjs/axios": "^0.1.0",
@@ -43,8 +38,6 @@
     "class-validator": "^0.13.2",
     "cors": "^2.8.5",
     "decimal.js": "^10.3.1",
-    "firebase-admin": "^11.0.1",
-    "firebase-functions": "^4.1.1",
     "mysql2": "^2.3.3",
     "nestjs-mailgun": "^3.1.4",
     "nodemailer": "^6.7.8",
