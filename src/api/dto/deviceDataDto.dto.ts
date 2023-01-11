@@ -8,4 +8,6 @@ export class DeviceDataDto {
   deviceName: string;
 
   userEmail: string;
+
+  token: string;
 }
