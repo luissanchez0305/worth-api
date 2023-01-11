@@ -13,8 +13,6 @@ async function bootstrap() {
   });
   const hostPort = parseInt(process.env.PORT) || 8080;
   await app.listen(hostPort);
-
-  console.log('Listening on port %d', hostPort);
 }
 
 bootstrap();

@@ -7,5 +7,5 @@ export class DeviceDataDto {
   @IsNotEmpty()
   deviceName: string;
 
-  userId: string;
+  userEmail: string;
 }

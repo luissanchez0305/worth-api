@@ -132,11 +132,6 @@ export class UsersService {
   }
 
   async sendDeviceData(deviceData: DeviceDataDto) {
-    console.log(
-      'deviceData',
-      deviceData.deviceId,
-      deviceData.deviceName,
-      deviceData.userId,
-    );
+    console.log('deviceData', deviceData);
   }
 }
