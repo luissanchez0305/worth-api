@@ -93,7 +93,7 @@ export class MessagesService {
               },
             ],
             from: 'Worth App',
-            text: `Codigo de verificacion: ${user.SMSCode}`,
+            text: `Worth App - Codigo de verificacion: ${user.SMSCode}`,
           },
         ],
       },

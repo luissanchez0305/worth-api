@@ -53,4 +53,9 @@ export class User {
     default: false,
   })
   isPremium: boolean;
+
+  @Column({
+    nullable: true,
+  })
+  deviceId: string;
 }

@@ -15,6 +15,7 @@ import { APIModule } from './api/api.module';
 import { WebsocketsModule } from './websocket/websocket.module';
 import { SignalSymbolsModule } from './signalSymbol/signalSymbol.module';
 import { StatusModule } from './status/status.module';
+import { OrphanDeviceModule } from './orfanDevices/orphanDevices.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { StatusModule } from './status/status.module';
     SignalSymbolsModule,
     APIModule,
     StatusModule,
+    OrphanDeviceModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST,

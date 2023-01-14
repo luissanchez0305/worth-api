@@ -15,7 +15,8 @@ import { UsersService } from './users.service';
 import { CreateDto } from './dto/create.dto';
 import { SerializedUser } from './types/index';
 import { UpdateDto } from './dto/update.dto';
-import { DeviceDataDto } from 'src/api/dto/deviceDataDto.dto';
+import { DeviceDataDto } from 'src/orfanDevices/dto/deviceDataDto.dto';
+import { UpdateDeviceDto } from './dto/update-device.dto';
 
 @Controller('users')
 export class UsersController {
@@ -27,13 +28,13 @@ export class UsersController {
   }
 
   @Get(':id')
-  getUser(@Param() params) {
+  getUserById(@Param() params) {
     return this.usersService.getUserId(params.id);
   }
 
   @Get('/email/:email')
-  getUserEmail(@Param() params) {
-    return this.usersService.getUser(params.email);
+  getUserByEmail(@Param() params) {
+    return this.usersService.getUserByEmail(params.email);
   }
 
   @Post()
@@ -56,8 +57,16 @@ export class UsersController {
     }
   }
 
-  @Post('send-device-data')
-  async sendDeviceData(@Body() deviceDataDto: DeviceDataDto) {
-    return this.usersService.sendDeviceData(deviceDataDto);
+  @Put('device/:email')
+  @UsePipes(ValidationPipe)
+  updateDevice(
+    @Body() userDto: UpdateDeviceDto,
+    @Param('email') currentEmail: string,
+  ): any {
+    try {
+      return this.usersService.updateUser(userDto, currentEmail);
+    } catch (ex) {
+      return { error: ex };
+    }
   }
 }

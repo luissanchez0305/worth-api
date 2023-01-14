@@ -9,7 +9,8 @@ import { convertToBoolean } from '../utils/convertToBoolean';
 import { randomCodeGenerator } from 'src/utils/randomCodeGenerator';
 import { throwError } from 'rxjs';
 import { MessagesService } from 'src/messages/messages.service';
-import { DeviceDataDto } from 'src/api/dto/deviceDataDto.dto';
+import { DeviceDataDto } from 'src/orfanDevices/dto/deviceDataDto.dto';
+import { UpdateDeviceDto } from './dto/update-device.dto';
 // const SibApiV3Sdk = require('sib-api-v3-typescript');
 
 @Injectable()
@@ -78,7 +79,7 @@ export class UsersService {
     return user;
   }
 
-  async getUser(email: string) {
+  async getUserByEmail(email: string) {
     const user = await this.userRepository.findOne({
       where: { email },
     });
@@ -88,6 +89,7 @@ export class UsersService {
 
   async updateUserEmailCode(user: userEntity) {
     user.emailCode = randomCodeGenerator();
+    user.isValidated = false;
     return await this.userRepository.save(user);
   }
 
@@ -101,6 +103,7 @@ export class UsersService {
 
   async updateUserSMSCode(user: userEntity) {
     user.SMSCode = randomCodeGenerator();
+    user.isValidated = false;
     return await this.userRepository.save(user);
   }
 
@@ -112,7 +115,7 @@ export class UsersService {
     await this.userRepository.save(user);
   }
 
-  async updateUser(userDto: UpdateDto, currentEmail: string) {
+  async updateUser(userDto: UpdateDto | UpdateDeviceDto, currentEmail: string) {
     const user = await this.userRepository.findOne({
       where: { email: currentEmail },
     });
@@ -120,7 +123,9 @@ export class UsersService {
       throw new Error('User does not exist');
     }
 
-    userDto.isPremium = convertToBoolean(userDto.isPremium);
+    if (userDto instanceof UpdateDto) {
+      userDto.isPremium = convertToBoolean(userDto.isPremium);
+    }
 
     this.userRepository.update(user.id, userDto).then(async () => {
       if (userDto.email !== currentEmail) {
@@ -131,7 +136,9 @@ export class UsersService {
     });
   }
 
-  async sendDeviceData(deviceData: DeviceDataDto) {
-    console.log('deviceData', deviceData);
+  async getUserByDeviceId(deviceId: string) {
+    return await this.userRepository.findOne({
+      where: { deviceId: deviceId },
+    });
   }
 }

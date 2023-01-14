@@ -11,5 +11,7 @@ export class User {
     public isPremium: boolean,
     public password: string,
     public isValidated: boolean,
+    public deviceId: string,
+    public token: string,
   ) {}
 }

@@ -27,14 +27,14 @@ export class MessagesController {
 
   @Post('email-code-send')
   async sendEmailCode(@Body() emailDto: ValidateUserDto) {
-    const user = await this.usersService.getUser(emailDto.email);
+    const user = await this.usersService.getUserByEmail(emailDto.email);
     await this.usersService.updateUserEmailCode(user);
     return this.messagesService.sendEmailCode(user);
   }
 
   @Post('email-code-validate')
   async validateEmailCode(@Body() emailDto: ValidateUserDto) {
-    const user = await this.usersService.getUser(emailDto.email);
+    const user = await this.usersService.getUserByEmail(emailDto.email);
     if (user.emailCode == emailDto.code) {
       await this.usersService.resetEmailCode(user);
       return { valid: true };
@@ -44,14 +44,14 @@ export class MessagesController {
 
   @Post('sms-code-send')
   async sendSMSCode(@Body() emailDto: ValidateUserDto) {
-    const user = await this.usersService.getUser(emailDto.email);
+    const user = await this.usersService.getUserByEmail(emailDto.email);
     await this.usersService.updateUserSMSCode(user);
     return this.messagesService.sendSMSCode(user);
   }
 
   @Post('sms-code-validate')
   async validateSMSCode(@Body() validateDto: ValidateUserDto) {
-    const user = await this.usersService.getUser(validateDto.email);
+    const user = await this.usersService.getUserByEmail(validateDto.email);
     if (user.SMSCode == validateDto.code) {
       await this.usersService.resetSMSCode(user);
       return { valid: true };

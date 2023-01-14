@@ -5,6 +5,7 @@ import { Signal } from './Signal';
 import { TakeProfit } from './TakeProfit';
 import { SignalSymbols } from './SignalSymbols';
 import { SignalLog } from './SignalLog';
+import { OrphanDevice } from './OrphanDevice';
 const entities = [
   User,
   Symbol,
@@ -13,6 +14,7 @@ const entities = [
   TakeProfit,
   SignalSymbols,
   SignalLog,
+  OrphanDevice,
 ];
 
 export { User };
@@ -22,4 +24,5 @@ export { Signal };
 export { TakeProfit };
 export { SignalSymbols };
 export { SignalLog };
+export { OrphanDevice };
 export default entities;

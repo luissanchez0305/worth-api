@@ -1,7 +1,6 @@
 import { Controller, Post, Body, Get, Request, Param } from '@nestjs/common';
 import { SymbolDTO } from './dto/symbol.dto';
 import { APIService } from './api.service';
-import { DeviceDataDto } from './dto/deviceDataDto.dto';
 
 @Controller('api')
 export class APIController {
