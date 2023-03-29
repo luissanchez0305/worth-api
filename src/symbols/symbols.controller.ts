@@ -5,6 +5,7 @@ import {
   Body,
   UsePipes,
   ValidationPipe,
+  Param,
   Put,
 } from '@nestjs/common';
 import { SymbolsService } from './symbols.service';
@@ -19,6 +20,11 @@ export class SymbolsController {
   @Get()
   findAll(): Promise<SerializedSymbol[]> {
     return this.symbolsService.getSymbols();
+  }
+
+  @Get(':id')
+  getUserById(@Param() params) {
+    return this.symbolsService.getSymbolId(params.id);
   }
 
   @Get('active')

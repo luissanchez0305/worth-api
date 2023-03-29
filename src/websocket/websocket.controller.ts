@@ -20,33 +20,33 @@ export class WebsocketController {
     private readonly signalService: SignalsService,
   ) {}
 
-  // @Get('start')
-  // async startWebsocket(@Request() params) {
-  //   if (params.body.signalId) {
-  //     const signalObj = await this.signalService.getSignal(
-  //       params.body.signalId,
-  //     );
-  //     return await this.websocketService.startWebsocket(
-  //       signalObj.signal.exchangeSymbol,
-  //     );
-  //   } else {
-  //     return { error: 'include signal' };
-  //   }
-  // }
-  // @Get('stop')
-  // async stopWebsocket(@Request() params) {
-  //   if (params.body.signalId) {
-  //     const signalObj = await this.signalService.getSignal(
-  //       params.body.signalId,
-  //     );
-  //     return await this.websocketService.stopWebsocket(
-  //       // signalObj.signal.id,
-  //       signalObj.signal.exchangeSymbol,
-  //     );
-  //   } else {
-  //     return { error: 'include symbol' };
-  //   }
-  // }
+  @Get('start')
+  async startWebsocket(@Request() params) {
+    if (params.body.signalId) {
+      const signalObj = await this.signalService.getSignal(
+        params.body.signalId,
+      );
+      return await this.websocketService.startWebsocket(
+        signalObj.signal.exchangeSymbol,
+      );
+    } else {
+      return { error: 'include signal' };
+    }
+  }
+  @Get('stop')
+  async stopWebsocket(@Request() params) {
+    if (params.body.signalId) {
+      const signalObj = await this.signalService.getSignal(
+        params.body.signalId,
+      );
+      return await this.websocketService.stopWebsocket(
+        // signalObj.signal.id,
+        signalObj.signal.exchangeSymbol,
+      );
+    } else {
+      return { error: 'include symbol' };
+    }
+  }
 
   /* @Get('price/:symbol')
   async getSymbolPrice(@Param() params) {

@@ -12,8 +12,7 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
   const hostPort = parseInt(process.env.PORT) || 8080;
-  await app.listen(3001);
-  // await app.listen(hostPort);
+  await app.listen(hostPort);
 }
 
 bootstrap();
