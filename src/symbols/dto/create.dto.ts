@@ -4,7 +4,6 @@ export class CreateDto {
   @IsNotEmpty()
   from: string;
 
-  @IsNotEmpty()
   to: string;
 
   @IsNotEmpty()
