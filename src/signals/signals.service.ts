@@ -100,38 +100,15 @@ export class SignalsService {
 
   async updateSignal(signalDto: UpdateDto) {
     const signalId = signalDto.id;
-    const profits = await this.takeProfitRepository
-      .createQueryBuilder('takeProfit')
-      .innerJoin('takeProfit.signal', 'tp_signal')
-      .where('tp_signal.id = :signalId', { signalId })
-      .getMany();
     const signal = await this.signalRepository.findOne({
       where: { id: signalId },
     });
-
-    /* {
-      where: { id: signalDto.id },
-    }); */
     if (!signal) {
       throw new Error('User does not exist');
     }
-
-    profits.forEach(async (p) => {
-      await this.takeProfitRepository.remove(p);
-    });
-
-    if (signalDto.takeProfits) {
-      for (const tp of signalDto.takeProfits) {
-        const { price } = tp;
-        const _tp = new TakeProfit();
-        _tp.price = price;
-        _tp.signal = signal;
-        await this.takeProfitRepository.save(_tp);
-      }
-    }
     signalDto.stopLostReached = convertToBoolean(signalDto.stopLostReached);
     const { ..._signalDto } = signalDto;
-    return await this.signalRepository.update(signal.id, _signalDto);
+    return await this.signalRepository.save(_signalDto);
   }
 
   async updateTakeProfit(takeProfit: UpdateDtoTakeProfit) {
