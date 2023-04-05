@@ -59,4 +59,12 @@ export class SymbolsService {
     symbolDto.showMarquee = convertToBoolean(symbolDto.showMarquee);
     return this.symbolRepository.update(symbol.id, symbolDto);
   }
+
+  async getSymbolId(id: number) {
+    const user = await this.symbolRepository.findOne({
+      where: { id },
+    });
+
+    return user;
+  }
 }

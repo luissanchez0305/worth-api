@@ -26,7 +26,9 @@ export class WebsocketController {
       const signalObj = await this.signalService.getSignal(
         params.body.signalId,
       );
-      return await this.websocketService.startWebsocket(signalObj);
+      return await this.websocketService.startWebsocket(
+        signalObj.signal.exchangeSymbol,
+      );
     } else {
       return { error: 'include signal' };
     }
@@ -38,7 +40,7 @@ export class WebsocketController {
         params.body.signalId,
       );
       return await this.websocketService.stopWebsocket(
-        signalObj.signal.id,
+        // signalObj.signal.id,
         signalObj.signal.exchangeSymbol,
       );
     } else {
@@ -46,8 +48,8 @@ export class WebsocketController {
     }
   }
 
-  @Get('price/:symbol')
+  /* @Get('price/:symbol')
   async getSymbolPrice(@Param() params) {
     return await this.websocketService.getSymbolPrice(params.symbol);
-  }
+  } */
 }
