@@ -59,4 +59,8 @@ export class SymbolsService {
     symbolDto.showMarquee = convertToBoolean(symbolDto.showMarquee);
     return this.symbolRepository.update(symbol.id, symbolDto);
   }
+
+  deleteSymbol(symbolDto: UpdateDto): any {
+    return this.symbolRepository.delete(symbolDto.id);
+  }
 }
