@@ -4,8 +4,10 @@ import {
   Post,
   Body,
   UsePipes,
+  Param,
   ValidationPipe,
   Put,
+  Delete,
 } from '@nestjs/common';
 import { SymbolsService } from './symbols.service';
 import { CreateDto } from './dto/create.dto';
@@ -19,6 +21,16 @@ export class SymbolsController {
   @Get()
   findAll(): Promise<SerializedSymbol[]> {
     return this.symbolsService.getSymbols();
+  }
+
+  @Get(':id')
+  getById(@Param() params) {
+    return this.symbolsService.getSymbolId(params.id);
+  }
+
+  @Delete(':id')
+  deleteSymbol(@Param() params): any {
+    return this.symbolsService.deleteSymbol(params.id);
   }
 
   @Get('active')

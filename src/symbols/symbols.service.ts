@@ -60,7 +60,15 @@ export class SymbolsService {
     return this.symbolRepository.update(symbol.id, symbolDto);
   }
 
-  deleteSymbol(symbolDto: UpdateDto): any {
-    return this.symbolRepository.delete(symbolDto.id);
+  deleteSymbol(id: number): any {
+    return this.symbolRepository.delete(id);
+  }
+
+  async getSymbolId(id: number) {
+    const user = await this.symbolRepository.findOne({
+      where: { id },
+    });
+  
+    return user;
   }
 }
