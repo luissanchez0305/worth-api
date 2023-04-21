@@ -53,13 +53,4 @@ export class SymbolsController {
       return { error: ex };
     }
   }
-
-  @Delete()
-  delete(@Body() symbolDto: UpdateDto): any {
-    try {
-      return this.symbolsService.deleteSymbol(symbolDto);
-    } catch (ex) {
-      return { error: ex };
-    }
-  }
 }
