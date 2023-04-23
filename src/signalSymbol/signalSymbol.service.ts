@@ -17,6 +17,15 @@ export class SignalSymbolsService {
     return symbols.map((symbol) => new SerializedCurrency(symbol));
   }
 
+  async getAllSymbols() {
+    const symbols = await this.signalSymbolsRepository.find({
+      order: {
+        symbol: 'ASC',
+      },
+    });
+    return symbols.map((symbol) => new SerializedCurrency(symbol));
+  }
+
   async getSymbol(symbol: string) {
     const res = await this.signalSymbolsRepository.findOne({
       where: {

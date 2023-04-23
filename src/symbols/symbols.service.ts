@@ -68,7 +68,7 @@ export class SymbolsService {
     const user = await this.symbolRepository.findOne({
       where: { id },
     });
-  
+
     return user;
   }
 }

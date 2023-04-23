@@ -73,4 +73,13 @@ export class APIService {
     const res = await firstValueFrom(_res);
     return res.data;
   }
+
+  async getTiingoForexPrices(symbols: string) {
+    const res = await this.httpService
+      .get(
+        `https://api.tiingo.com/tiingo/fx/top?tickers=${symbols}&token=${process.env.TIINGO_KEY}`,
+      )
+      .toPromise();
+    return res.data;
+  }
 }

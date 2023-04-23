@@ -5,6 +5,8 @@ import { HttpModule } from '@nestjs/axios';
 import { SignalSymbolsModule } from 'src/signalSymbol/signalSymbol.module';
 import { SignalsModule } from 'src/signals/signals.module';
 import { SignalLogsModule } from 'src/SignalLogs/signalLogs.module';
+import { APIModule } from 'src/api/api.module';
+import { APIService } from 'src/api/api.service';
 
 @Module({
   imports: [
@@ -18,7 +20,7 @@ import { SignalLogsModule } from 'src/SignalLogs/signalLogs.module';
     CacheModule.register(),
   ],
   controllers: [WebsocketController],
-  providers: [WebsocketService],
+  providers: [WebsocketService, APIService],
   exports: [WebsocketService],
 })
 export class WebsocketsModule {}

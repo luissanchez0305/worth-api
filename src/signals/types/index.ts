@@ -16,6 +16,7 @@ export interface Signal {
 export class SerializedSignal {
   id: number;
   symbol: string;
+  exchangeSymbol: string;
   type: string;
   entryPrice: Decimal;
 

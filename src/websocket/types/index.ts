@@ -4,8 +4,8 @@ import { TakeProfit } from 'src/typeorm';
 
 export interface SymbolData {
   symbol: string;
-  previousPrice: Decimal;
-  signal: Signal;
-  checkProfit: TakeProfit;
-  takeProfits: TakeProfit[];
+  previousPrice?: Decimal;
+  signal?: Signal;
+  checkProfit?: TakeProfit;
+  takeProfits?: TakeProfit[];
 }
