@@ -62,6 +62,8 @@ export class WebsocketService {
         }),
         () => {
           this.symbols.push({
+            id: signal.id,
+            index: signal.id,
             symbol: signalObj.signal.exchangeSymbol,
             signal: signalObj.signal,
             checkProfit,

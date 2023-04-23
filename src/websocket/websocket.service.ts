@@ -48,17 +48,12 @@ export class WebsocketService implements OnModuleInit {
         (s) => s.symbol.indexOf('OANDA') > -1,
       );
       if (message.data && message.data.length) {
-        if (
-          message.data[3] === 'binance' &&
-          cryptoList.find(
-            (s) => s.symbol.toLowerCase().indexOf(message.data[1]) > -1,
-          )
-        ) {
-          console.log(
-            'Message from server crypto',
-            message.data,
-            message.data[0],
-          );
+        const foundCrypto = cryptoList.find(
+          (s) => s.symbol.toLowerCase().indexOf(message.data[1]) > -1,
+        );
+        if (message.data[3] === 'binance' && foundCrypto) {
+          // TODO hacer metodo para comparar precio actual con el anterior y segun el tipo
+          self.symbols[foundCrypto.index].previousPrice = message.data[5];
         }
         const date = new Date();
         // runs every 2 minutes
@@ -66,18 +61,28 @@ export class WebsocketService implements OnModuleInit {
           self.minuteRan !== date.getUTCMinutes() &&
           date.getUTCMinutes() % 2 === 0
         ) {
+          // recalculate all signals
           self.getAllSignalSymbols();
           const forexSymbols = [];
           for (const forex of forexList) {
-            forexSymbols.push(
-              forex.symbol.replace('OANDA:', '').replace('_', '').toLowerCase(),
-            );
-            console.log('forex', forex.symbol);
+            forexSymbols.push({
+              symbol: forex.symbol
+                .replace('OANDA:', '')
+                .replace('_', '')
+                .toLowerCase(),
+              index: forex.index,
+            });
           }
           self.apiService
-            .getTiingoForexPrices(forexSymbols.join(','))
+            .getTiingoForexPrices(forexSymbols.map((f) => f.symbol).join(','))
             .then((data) => {
-              console.log('data', data);
+              for (const _forex of data) {
+                const index = forexSymbols.find(
+                  (f) => f.symbol === _forex.ticker,
+                ).index;
+                // TODO hacer metodo para comparar precio actual con el anterior y segun el tipo
+                self.symbols[index].previousPrice = _forex.midPrice;
+              }
             });
           self.minuteRan = date.getUTCMinutes();
         }
@@ -93,9 +98,13 @@ export class WebsocketService implements OnModuleInit {
     this.symbols = [];
     if (this.signalsService && !this.symbols.length) {
       const _symbols = await this.signalsService.getSignals();
-      for (const symbol of _symbols) {
+      for (const symbolIndex in _symbols) {
+        const symbol = _symbols[symbolIndex];
         this.symbols.push({
-          symbol: symbol.exchangeSymbol,
+          index: Number(symbolIndex),
+          symbol: _symbols[symbolIndex].exchangeSymbol,
+          type: symbol.type,
+          id: symbol.id,
         });
       }
     }
