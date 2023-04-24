@@ -23,7 +23,7 @@ export class SymbolsController {
     return this.symbolsService.getSymbols();
   }
 
-  @Get(':id')
+  @Get('symbol/:id')
   getById(@Param() params) {
     return this.symbolsService.getSymbolId(params.id);
   }
