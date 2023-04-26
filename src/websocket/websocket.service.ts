@@ -101,7 +101,9 @@ export class WebsocketService implements OnModuleInit {
                 });
 
                 // TODO hacer metodo para comparar precio actual con el anterior y segun el tipo
-                self.symbols[index].previousPrice = _forex.midPrice;
+                if (self.symbols.length) {
+                  self.symbols[index].previousPrice = _forex.midPrice;
+                }
               }
             });
           self.minuteRan = date.getUTCMinutes();
@@ -115,7 +117,6 @@ export class WebsocketService implements OnModuleInit {
   }
 
   async getAllSignalSymbols() {
-    this.symbols = [];
     if (this.signalsService && !this.symbols.length) {
       const _symbols = await this.signalsService.getSignals();
       for (const symbolIndex in _symbols) {
