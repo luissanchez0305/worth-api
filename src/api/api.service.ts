@@ -10,22 +10,24 @@ export class APIService {
   constructor(private readonly httpService: HttpService) {}
 
   async getPrices(symbolDto: SymbolDTO) {
+    const fhKey = process.env.FINNHUB_KEY || process.env.FINNHUB_SANDBOX_KEY;
     const _res = this.httpService.get(
-      `https://finnhub.io/api/v1/crypto/candle?token=${process.env.FINNHUB_KEY}&resolution=D&symbol=BINANCE:${symbolDto.quote}${symbolDto.base}&from=${symbolDto.from}&to=${symbolDto.to}`,
+      `https://finnhub.io/api/v1/crypto/candle?token=${fhKey}&resolution=D&symbol=BINANCE:${symbolDto.quote}${symbolDto.base}&from=${symbolDto.from}&to=${symbolDto.to}`,
     );
     const res = await firstValueFrom(_res);
     return res.data;
   }
 
   async getAllSymbols() {
+    const fhKey = process.env.FINNHUB_KEY || process.env.FINNHUB_SANDBOX_KEY;
     const _resBinance = await this.httpService
       .get(
-        `https://finnhub.io/api/v1/forex/symbol?token=${process.env.FINNHUB_KEY}&exchange=binance`,
+        `https://finnhub.io/api/v1/forex/symbol?token=${fhKey}&exchange=binance`,
       )
       .toPromise();
     const _resOanda = await this.httpService
       .get(
-        `https://finnhub.io/api/v1/forex/symbol?token=${process.env.FINNHUB_KEY}&exchange=oanda`,
+        `https://finnhub.io/api/v1/forex/symbol?token=${fhKey}&exchange=oanda`,
       )
       .toPromise();
     /* .pipe(
@@ -38,14 +40,15 @@ export class APIService {
   }
 
   async getSymbol(from = '', to = '') {
+    const fhKey = process.env.FINNHUB_KEY || process.env.FINNHUB_SANDBOX_KEY;
     const _resOanda = await this.httpService
       .get(
-        `https://finnhub.io/api/v1/forex/symbol?token=${process.env.FINNHUB_KEY}&exchange=oanda`,
+        `https://finnhub.io/api/v1/forex/symbol?token=${fhKey}&exchange=oanda`,
       )
       .toPromise();
     const _resBinance = await this.httpService
       .get(
-        `https://finnhub.io/api/v1/forex/symbol?token=${process.env.FINNHUB_KEY}&exchange=binance`,
+        `https://finnhub.io/api/v1/forex/symbol?token=${fhKey}&exchange=binance`,
       )
       .toPromise();
     const res = _resOanda.data.concat(_resBinance.data);
