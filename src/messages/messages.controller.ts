@@ -51,6 +51,7 @@ export class MessagesController {
 
   @Post('sms-code-validate')
   async validateSMSCode(@Body() validateDto: ValidateUserDto) {
+    console.log('validateDto', validateDto);
     const user = await this.usersService.getUserByEmail(validateDto.email);
     if (user.SMSCode == validateDto.code) {
       await this.usersService.resetSMSCode(user);
