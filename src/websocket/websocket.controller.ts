@@ -48,8 +48,8 @@ export class WebsocketController {
   //   }
   // }
 
-  /* @Get('price/:symbol')
+  @Get('price/:symbol')
   async getSymbolPrice(@Param() params) {
     return await this.websocketService.getSymbolPrice(params.symbol);
-  } */
+  }
 }

@@ -10,6 +10,8 @@ import { SignalLogsService } from 'src/SignalLogs/signalLogs.service';
 import { WebSocket } from 'ws';
 import { SymbolData } from './types';
 import { APIService } from 'src/api/api.service';
+import Decimal from 'decimal.js';
+import { getPriceWithCorrectDecimals } from 'src/utils/decimalNumbers';
 
 @Injectable()
 export class WebsocketService implements OnModuleInit {
@@ -41,9 +43,11 @@ export class WebsocketService implements OnModuleInit {
     const self = this;
     this.ws.on('message', function (event, isBinary) {
       const message = JSON.parse(event.toString());
+
       const cryptoList = self.symbols.filter(
         (s) => s.symbol.indexOf('BINANCE') > -1,
       );
+
       const forexList = self.symbols.filter(
         (s) => s.symbol.indexOf('OANDA') > -1,
       );
@@ -54,8 +58,15 @@ export class WebsocketService implements OnModuleInit {
         if (message.data[3] === 'binance' && foundCrypto) {
           // TODO hacer metodo para comparar precio actual con el anterior y segun el tipo
           self.symbols[foundCrypto.index].previousPrice = message.data[5];
+
+          self.signalSymbolsService.updateSymbol({
+            symbol: foundCrypto.symbol,
+            price: getPriceWithCorrectDecimals(message.data[5]),
+          });
         }
+
         const date = new Date();
+
         // runs every 2 minutes
         if (
           self.minuteRan !== date.getUTCMinutes() &&
@@ -64,22 +75,31 @@ export class WebsocketService implements OnModuleInit {
           // recalculate all signals
           self.getAllSignalSymbols();
           const forexSymbols = [];
+
           for (const forex of forexList) {
             forexSymbols.push({
               symbol: forex.symbol
                 .replace('OANDA:', '')
                 .replace('_', '')
                 .toLowerCase(),
+              realSymbol: forex.symbol,
               index: forex.index,
             });
           }
+
           self.apiService
             .getTiingoForexPrices(forexSymbols.map((f) => f.symbol).join(','))
             .then((data) => {
               for (const _forex of data) {
-                const index = forexSymbols.find(
+                const { index, realSymbol } = forexSymbols.find(
                   (f) => f.symbol === _forex.ticker,
-                ).index;
+                );
+
+                self.signalSymbolsService.updateSymbol({
+                  symbol: realSymbol,
+                  price: getPriceWithCorrectDecimals(_forex.midPrice),
+                });
+
                 // TODO hacer metodo para comparar precio actual con el anterior y segun el tipo
                 self.symbols[index].previousPrice = _forex.midPrice;
               }
@@ -113,5 +133,11 @@ export class WebsocketService implements OnModuleInit {
   async stopWebsocket(symbol: string) {
     console.log('stop', symbol);
     // this.ws.send(JSON.stringify({ type: 'unsubscribe', symbol: symbol }));
+  }
+
+  async getSymbolPrice(symbol: string): Promise<Decimal> {
+    const _symbol = await this.signalSymbolsService.getSymbol(symbol);
+
+    return _symbol.price;
   }
 }
