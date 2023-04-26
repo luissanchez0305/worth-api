@@ -105,6 +105,9 @@ export class WebsocketService implements OnModuleInit {
                   self.symbols[index].previousPrice = _forex.midPrice;
                 }
               }
+            })
+            .catch((error) => {
+              console.log('ERROR TIINGO REQUEST', error);
             });
           self.minuteRan = date.getUTCMinutes();
         }
