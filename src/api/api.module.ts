@@ -7,7 +7,7 @@ import { APIService } from './api.service';
   controllers: [APIController],
   imports: [
     HttpModule.register({
-      timeout: 5000,
+      timeout: 20000,
       maxRedirects: 5,
     }),
   ],
