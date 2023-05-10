@@ -1,9 +1,4 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { User } from 'src/users/users.model';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
-import { SymbolDto } from './dto/symbol.dto';
-import { Signal } from 'src/signals/signals.model';
 import { SignalSymbolsService } from 'src/signalSymbol/signalSymbol.service';
 import { SignalsService } from 'src/signals/signals.service';
 import { SignalLogsService } from 'src/SignalLogs/signalLogs.service';
@@ -12,6 +7,7 @@ import { SymbolData } from './types';
 import { APIService } from 'src/api/api.service';
 import Decimal from 'decimal.js';
 import { getPriceWithCorrectDecimals } from 'src/utils/decimalNumbers';
+import { UpdateDto } from 'src/signals/dto/update.dto';
 
 @Injectable()
 export class WebsocketService implements OnModuleInit {
@@ -26,92 +22,263 @@ export class WebsocketService implements OnModuleInit {
     private readonly signalsService: SignalsService,
     private readonly signalLogsService: SignalLogsService,
     private readonly apiService: APIService,
-  ) {
-    const subscribe = {
-      eventName: 'subscribe',
-      authorization: '74658269659330ee03fa822c23520b6b453325f2',
-      eventData: {
-        thresholdLevel: 5,
-      },
-    };
+  ) {}
 
-    this.ws.on('open', function open() {
-      this.send(JSON.stringify(subscribe));
-    });
+  async checkPrice(_this: any, currentPrice: number, foundSignal: SymbolData) {
+    const signalSymbol = await _this.signalSymbolsService.getSymbol(
+      foundSignal.symbol,
+    );
 
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const self = this;
-    this.ws.on('message', function (event, isBinary) {
-      const message = JSON.parse(event.toString());
+    // --------------- CHECK FOR STOP LOST ----------------------
+    if (
+      foundSignal.type === 'SELL' &&
+      _this.didPriceWentUp(
+        Number(signalSymbol.price),
+        currentPrice,
+        Number(foundSignal.stopLost),
+      )
+    ) {
+      // TODO: send notification
 
-      const cryptoList = self.symbols.filter(
-        (s) => s.symbol.indexOf('BINANCE') > -1,
+      // update signal SELL
+      //    x stop lost reached
+      //    x entry price reached
+      updateSignal(_this, foundSignal, true, true);
+    } else if (
+      foundSignal.type === 'BUY' &&
+      _this.didPriceWentDown(
+        Number(signalSymbol.price),
+        currentPrice,
+        Number(foundSignal.stopLost),
+      )
+    ) {
+      // TODO: send notification
+      // update signal BUY
+      //    stop lost reached
+      //    entry price reached
+      updateSignal(_this, foundSignal, true, true);
+    }
+    // --------------- CHECK FOR ENTRY PRICE ----------------------
+    else if (
+      foundSignal.type === 'SELL' &&
+      _this.didPriceWentUp(
+        Number(signalSymbol.price),
+        currentPrice,
+        Number(foundSignal.entryPrice),
+      )
+    ) {
+      // TODO: send notification
+      // update signal SELL
+      //    entry price reached
+      updateSignal(_this, foundSignal, false, true);
+    } else if (
+      foundSignal.type === 'BUY' &&
+      _this.didPriceWentDown(
+        Number(signalSymbol.price),
+        currentPrice,
+        Number(foundSignal.entryPrice),
+      )
+    ) {
+      // TODO: send notification
+      // update signal BUY
+      //    entry price reached
+      updateSignal(_this, foundSignal, false, true);
+    }
+
+    // --------------- CHECK FOR TAKE PROFIT ----------------------
+    if (foundSignal.type === 'SELL') {
+      const sortedTPs = foundSignal.takeProfits.sort(
+        (a, b) => Number(b.price) - Number(a.price),
       );
-
-      const forexList = self.symbols.filter(
-        (s) => s.symbol.indexOf('OANDA') > -1,
-      );
-      if (message.data && message.data.length) {
-        const foundCrypto = cryptoList.find(
-          (s) => s.symbol.toLowerCase().indexOf(message.data[1]) > -1,
-        );
-        if (message.data[3] === 'binance' && foundCrypto) {
-          // TODO hacer metodo para comparar precio actual con el anterior y segun el tipo
-          self.symbols[foundCrypto.index].previousPrice = message.data[5];
-
-          self.signalSymbolsService.updateSymbol({
-            symbol: foundCrypto.symbol,
-            price: getPriceWithCorrectDecimals(message.data[5]),
-          });
-        }
-
-        const date = new Date();
-
-        // runs every 2 minutes
+      const reachedTP = [];
+      for (const tp of sortedTPs) {
         if (
-          self.minuteRan !== date.getUTCMinutes() &&
-          date.getUTCMinutes() % 2 === 0
+          _this.didPriceWentDown(
+            Number(signalSymbol.price),
+            currentPrice,
+            Number(tp.price),
+          )
         ) {
-          // recalculate all signals
-          self.getAllSignalSymbols();
-          const forexSymbols = [];
-
-          for (const forex of forexList) {
-            forexSymbols.push({
-              symbol: forex.symbol
-                .replace('OANDA:', '')
-                .replace('_', '')
-                .toLowerCase(),
-              realSymbol: forex.symbol,
-              index: forex.index,
-            });
-          }
-
-          self.apiService
-            .getTiingoForexPrices(forexSymbols.map((f) => f.symbol).join(','))
-            .then((data) => {
-              for (const _forex of data) {
-                const { index, realSymbol } = forexSymbols.find(
-                  (f) => f.symbol === _forex.ticker,
-                );
-
-                self.signalSymbolsService.updateSymbol({
-                  symbol: realSymbol,
-                  price: getPriceWithCorrectDecimals(_forex.midPrice),
-                });
-
-                // TODO hacer metodo para comparar precio actual con el anterior y segun el tipo
-                self.symbols[index].previousPrice = _forex.midPrice;
-              }
-            });
-          self.minuteRan = date.getUTCMinutes();
+          reachedTP.push(tp.id);
         }
       }
-    });
+      if (reachedTP.length > 0) {
+        // TODO: send notification
+
+        // update take profit
+        //    take profit reached
+        foundSignal.takeProfits = foundSignal.takeProfits.filter(
+          (tp) => reachedTP.indexOf(tp.id) > -1,
+        );
+        updateSignal(_this, foundSignal, false, false, true);
+      }
+    } else if (foundSignal.type === 'BUY') {
+      const sortedTPs = foundSignal.takeProfits.sort(
+        (a, b) => Number(a.price) - Number(b.price),
+      );
+      const reachedTP = [];
+      for (const tp of sortedTPs) {
+        if (
+          _this.didPriceWentUp(
+            Number(signalSymbol.price),
+            currentPrice,
+            Number(tp.price),
+          )
+        ) {
+          reachedTP.push(tp.id);
+        }
+      }
+      if (reachedTP.length > 0) {
+        // TODO: send notification
+
+        // update take profit
+        //    take profit reached
+        foundSignal.takeProfits = foundSignal.takeProfits.filter(
+          (tp) => reachedTP.indexOf(tp.id) > -1,
+        );
+        updateSignal(_this, foundSignal, false, false, true);
+      }
+    }
+  }
+
+  didPriceWentUp(
+    previousPrice: number,
+    currentPrice: number,
+    monitorPrice: number,
+  ): boolean {
+    console.log(
+      'didPriceWentUp',
+      currentPrice,
+      currentPrice,
+      'currentPrice > monitorPrice',
+      currentPrice > monitorPrice,
+    );
+    return currentPrice > monitorPrice /* && previousPrice < monitorPrice */;
+  }
+
+  didPriceWentDown(
+    previousPrice: number,
+    currentPrice: number,
+    monitorPrice: number,
+  ): boolean {
+    console.log(
+      'didPriceWentDown',
+      currentPrice,
+      currentPrice,
+      'currentPrice < monitorPrice',
+      currentPrice < monitorPrice,
+    );
+    return currentPrice < monitorPrice /* && previousPrice > monitorPrice */;
   }
 
   onModuleInit() {
-    this.getAllSignalSymbols();
+    this.getAllSignalSymbols().then((symbols) => {
+      const subscribe = {
+        eventName: 'subscribe',
+        authorization: process.env.TIINGO_KEY,
+        eventData: {
+          thresholdLevel: 5,
+          tickers: symbols.map((s) => s.symbol.replace('BINANCE:', '')),
+        },
+      };
+
+      console.log('websocket subscribe');
+      this.ws.on('open', function open() {
+        this.send(JSON.stringify(subscribe));
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      const self = this;
+      this.ws.on('message', function (event, isBinary) {
+        try {
+          const message = JSON.parse(event.toString());
+
+          const cryptoList = self.symbols.filter(
+            (s) => s.symbol.indexOf('BINANCE') > -1,
+          );
+
+          const forexList = self.symbols.filter(
+            (s) => s.symbol.indexOf('OANDA') > -1,
+          );
+
+          if (message.data && message.data.length) {
+            const date = new Date();
+
+            // runs every 2 minutes
+            if (
+              self.minuteRan !== date.getUTCMinutes() &&
+              date.getUTCMinutes() % 2 === 0
+            ) {
+              console.log('2 mintues ran');
+              const foundCrypto = cryptoList.find(
+                (s) => s.symbol.toLowerCase().indexOf(message.data[1]) > -1,
+              );
+              // recalculate all signals
+              self.getAllSignalSymbols().then((symbols) => {
+                if (message.data[3] === 'binance' && foundCrypto) {
+                  self.symbols = symbols;
+                  // TODO hacer metodo para comparar precio actual con el anterior y segun el tipo
+                  self.symbols[foundCrypto.index].previousPrice =
+                    message.data[5];
+
+                  self.checkPrice(self, message.data[5], foundCrypto);
+                  self.signalSymbolsService.updateSymbol({
+                    symbol: foundCrypto.symbol,
+                    price: getPriceWithCorrectDecimals(message.data[5]),
+                  });
+                }
+
+                const forexSymbols = [];
+
+                for (const forex of forexList) {
+                  forexSymbols.push({
+                    symbol: forex.symbol
+                      .replace('OANDA:', '')
+                      .replace('_', '')
+                      .toLowerCase(),
+                    realSymbol: forex.symbol,
+                    index: forex.index,
+                  });
+                }
+
+                try {
+                  self.apiService
+                    .getTiingoForexPrices(
+                      forexSymbols.map((f) => f.symbol).join(','),
+                    )
+                    .then((data) => {
+                      for (const _forex of data) {
+                        const { index, realSymbol } = forexSymbols.find(
+                          (f) => f.symbol === _forex.ticker,
+                        );
+
+                        self.checkPrice(
+                          self,
+                          _forex.midPrice,
+                          self.symbols[index],
+                        );
+                        self.signalSymbolsService.updateSymbol({
+                          symbol: realSymbol,
+                          price: getPriceWithCorrectDecimals(_forex.midPrice),
+                        });
+
+                        // TODO hacer metodo para comparar precio actual con el anterior y segun el tipo
+                        self.symbols[index].previousPrice = _forex.midPrice;
+                      }
+                    });
+                } catch (e) {
+                  console.log('tiingo error ', e);
+                }
+              });
+
+              self.minuteRan = date.getUTCMinutes();
+            }
+          }
+        } catch (e) {
+          console.log('ws error ', e);
+        }
+      });
+    });
   }
 
   async getAllSignalSymbols() {
@@ -125,9 +292,13 @@ export class WebsocketService implements OnModuleInit {
           symbol: _symbols[symbolIndex].exchangeSymbol,
           type: symbol.type,
           id: symbol.id,
+          takeProfits: symbol.takeProfits.filter((tp) => !tp.takeProfitReached),
+          stopLost: symbol.stopLost,
+          entryPrice: symbol.entryPrice,
         });
       }
     }
+    return this.symbols;
   }
 
   async stopWebsocket(symbol: string) {
@@ -140,4 +311,42 @@ export class WebsocketService implements OnModuleInit {
 
     return _symbol.price;
   }
+}
+
+async function updateSignal(
+  _this: any,
+  foundSignal: SymbolData,
+  stopLostReached: boolean,
+  entryPriceReached: boolean,
+  takeProfitReached = false,
+) {
+  const signal = await _this.signalsService.getSignal(foundSignal.id);
+
+  console.log(
+    'signal updated',
+    signal.signal.symbol,
+    stopLostReached,
+    entryPriceReached,
+    takeProfitReached,
+  );
+  if (stopLostReached) {
+    signal.signal.stopLostReached = true;
+    signal.signal.stopLostReachedDate = new Date();
+  }
+  if (entryPriceReached) {
+    signal.signal.entryPriceReached = true;
+    signal.signal.entryPriceReachedDate = new Date();
+  }
+  if (takeProfitReached) {
+    signal.signal.takeProfits = signal.signal.takeProfits.map((tp) => {
+      if (foundSignal.takeProfits.map((_tp) => _tp.id).indexOf(tp.id) > -1) {
+        tp.takeProfitReached = true;
+        tp.takeProfitReachedDate = new Date();
+      }
+      return tp;
+    });
+  }
+
+  const signalUpdate = new UpdateDto(signal.signal);
+  _this.signalsService.updateSignal(signalUpdate);
 }

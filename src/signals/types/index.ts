@@ -1,6 +1,7 @@
 import { Exclude, Transform } from 'class-transformer';
 import Decimal from 'decimal.js';
 import { convertToBoolean } from 'src/utils/convertToBoolean';
+import { TakeProfit } from '../takeProfit.model';
 
 export interface Signal {
   id: number;
@@ -19,6 +20,9 @@ export class SerializedSignal {
   exchangeSymbol: string;
   type: string;
   entryPrice: Decimal;
+  takeProfits: TakeProfit[];
+  stopLost: Decimal;
+  entryPriceReached: boolean;
 
   constructor(partial: Partial<SerializedSignal>) {
     Object.assign(this, partial);
