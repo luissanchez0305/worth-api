@@ -11,7 +11,7 @@ import { UpdateDto } from 'src/signals/dto/update.dto';
 
 @Injectable()
 export class WebsocketService implements OnModuleInit {
-  private ws = new WebSocket(
+  private wsCrypto = new WebSocket(
     // `wss://ws.finnhub.io?token=${process.env.FINNHUB_KEY}`,
     'wss://api.tiingo.com/crypto',
   );
@@ -31,6 +31,7 @@ export class WebsocketService implements OnModuleInit {
 
     // --------------- CHECK FOR STOP LOST ----------------------
     if (
+      signalSymbol &&
       foundSignal.type === 'SELL' &&
       _this.didPriceWentUp(
         Number(signalSymbol.price),
@@ -45,6 +46,7 @@ export class WebsocketService implements OnModuleInit {
       //    x entry price reached
       updateSignal(_this, foundSignal, true, true);
     } else if (
+      signalSymbol &&
       foundSignal.type === 'BUY' &&
       _this.didPriceWentDown(
         Number(signalSymbol.price),
@@ -149,7 +151,7 @@ export class WebsocketService implements OnModuleInit {
     console.log(
       'didPriceWentUp',
       currentPrice,
-      currentPrice,
+      monitorPrice,
       'currentPrice > monitorPrice',
       currentPrice > monitorPrice,
     );
@@ -164,7 +166,7 @@ export class WebsocketService implements OnModuleInit {
     console.log(
       'didPriceWentDown',
       currentPrice,
-      currentPrice,
+      monitorPrice,
       'currentPrice < monitorPrice',
       currentPrice < monitorPrice,
     );
@@ -176,23 +178,26 @@ export class WebsocketService implements OnModuleInit {
       const subscribe = {
         eventName: 'subscribe',
         authorization: process.env.TIINGO_KEY,
+        subscriptionId: 'crypto_1',
         eventData: {
           thresholdLevel: 5,
           tickers: symbols.map((s) => s.symbol.replace('BINANCE:', '')),
+          // subscriptionId: 'crypto_1',
         },
       };
 
       console.log('websocket subscribe');
-      this.ws.on('open', function open() {
+      this.wsCrypto.on('open', function open() {
         this.send(JSON.stringify(subscribe));
       });
 
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
-      this.ws.on('message', function (event, isBinary) {
+      this.wsCrypto.on('message', function (event, isBinary) {
         try {
           const message = JSON.parse(event.toString());
 
+          // console.log('websocket message', message);
           const cryptoList = self.symbols.filter(
             (s) => s.symbol.indexOf('BINANCE') > -1,
           );
@@ -215,6 +220,17 @@ export class WebsocketService implements OnModuleInit {
               );
               // recalculate all signals
               self.getAllSignalSymbols().then((symbols) => {
+                const _subscribe = {
+                  eventName: 'subscribe',
+                  authorization: process.env.TIINGO_KEY,
+                  eventData: {
+                    thresholdLevel: 5,
+                    tickers: symbols.map((s) =>
+                      s.symbol.replace('BINANCE:', ''),
+                    ),
+                  },
+                };
+                self.wsCrypto.send(JSON.stringify(_subscribe));
                 if (message.data[3] === 'binance' && foundCrypto) {
                   self.symbols = symbols;
                   // TODO hacer metodo para comparar precio actual con el anterior y segun el tipo
@@ -285,6 +301,7 @@ export class WebsocketService implements OnModuleInit {
     this.symbols = [];
     if (this.signalsService && !this.symbols.length) {
       const _symbols = await this.signalsService.getSignals();
+
       for (const symbolIndex in _symbols) {
         const symbol = _symbols[symbolIndex];
         this.symbols.push({

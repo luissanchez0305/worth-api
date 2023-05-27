@@ -20,6 +20,7 @@ export class SymbolsController {
 
   @Get()
   findAll(): Promise<SerializedSymbol[]> {
+    console.log('symbols.controller.ts: SymbolsController: findAll():');
     return this.symbolsService.getSymbols();
   }
 
