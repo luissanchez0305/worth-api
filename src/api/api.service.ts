@@ -20,12 +20,16 @@ export class APIService {
   async getAllSymbols() {
     const _resBinance = await this.httpService
       .get(
-        `https://finnhub.io/api/v1/forex/symbol?token=${process.env.FINNHUB_KEY}&exchange=binance`,
+        `https://finnhub.io/api/v1/forex/symbol?token=${
+          process.env.FINNHUB_KEY ?? process.env.FINNHUB_SANDBOX_KEY
+        }&exchange=binance`,
       )
       .toPromise();
     const _resOanda = await this.httpService
       .get(
-        `https://finnhub.io/api/v1/forex/symbol?token=${process.env.FINNHUB_KEY}&exchange=oanda`,
+        `https://finnhub.io/api/v1/forex/symbol?token=${
+          process.env.FINNHUB_KEY ?? process.env.FINNHUB_SANDBOX_KEY
+        }&exchange=oanda`,
       )
       .toPromise();
     /* .pipe(
