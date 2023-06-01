@@ -29,10 +29,12 @@ export class WebsocketService implements OnModuleInit {
       foundSignal.symbol,
     );
 
+    console.log('signalSymbol', currentPrice, foundSignal.stopLost);
     // --------------- CHECK FOR STOP LOST ----------------------
     if (
       signalSymbol &&
       foundSignal.type === 'SELL' &&
+      !foundSignal.stopLostReached &&
       _this.didPriceWentUp(
         Number(signalSymbol.price),
         currentPrice,
@@ -44,10 +46,12 @@ export class WebsocketService implements OnModuleInit {
       // update signal SELL
       //    x stop lost reached
       //    x entry price reached
+      foundSignal.stopLostReached = true;
       updateSignal(_this, foundSignal, true, true);
     } else if (
       signalSymbol &&
       foundSignal.type === 'BUY' &&
+      !foundSignal.stopLostReached &&
       _this.didPriceWentDown(
         Number(signalSymbol.price),
         currentPrice,
@@ -58,11 +62,14 @@ export class WebsocketService implements OnModuleInit {
       // update signal BUY
       //    stop lost reached
       //    entry price reached
+      foundSignal.stopLostReached = true;
       updateSignal(_this, foundSignal, true, true);
     }
     // --------------- CHECK FOR ENTRY PRICE ----------------------
     else if (
+      signalSymbol &&
       foundSignal.type === 'SELL' &&
+      !foundSignal.entryPriceReached &&
       _this.didPriceWentUp(
         Number(signalSymbol.price),
         currentPrice,
@@ -72,9 +79,12 @@ export class WebsocketService implements OnModuleInit {
       // TODO: send notification
       // update signal SELL
       //    entry price reached
+      foundSignal.entryPriceReached = true;
       updateSignal(_this, foundSignal, false, true);
     } else if (
+      signalSymbol &&
       foundSignal.type === 'BUY' &&
+      !foundSignal.entryPriceReached &&
       _this.didPriceWentDown(
         Number(signalSymbol.price),
         currentPrice,
@@ -84,6 +94,7 @@ export class WebsocketService implements OnModuleInit {
       // TODO: send notification
       // update signal BUY
       //    entry price reached
+      foundSignal.entryPriceReached = true;
       updateSignal(_this, foundSignal, false, true);
     }
 
@@ -95,12 +106,17 @@ export class WebsocketService implements OnModuleInit {
       const reachedTP = [];
       for (const tp of sortedTPs) {
         if (
+          signalSymbol &&
+          !tp.takeProfitReached &&
           _this.didPriceWentDown(
             Number(signalSymbol.price),
             currentPrice,
             Number(tp.price),
           )
         ) {
+          foundSignal.takeProfits[
+            foundSignal.takeProfits.map((_tp) => _tp.id).indexOf(tp.id)
+          ].takeProfitReached = true;
           reachedTP.push(tp.id);
         }
       }
@@ -121,12 +137,17 @@ export class WebsocketService implements OnModuleInit {
       const reachedTP = [];
       for (const tp of sortedTPs) {
         if (
+          signalSymbol &&
+          !tp.takeProfitReached &&
           _this.didPriceWentUp(
             Number(signalSymbol.price),
             currentPrice,
             Number(tp.price),
           )
         ) {
+          foundSignal.takeProfits[
+            foundSignal.takeProfits.map((_tp) => _tp.id).indexOf(tp.id)
+          ].takeProfitReached = true;
           reachedTP.push(tp.id);
         }
       }
@@ -148,13 +169,6 @@ export class WebsocketService implements OnModuleInit {
     currentPrice: number,
     monitorPrice: number,
   ): boolean {
-    console.log(
-      'didPriceWentUp',
-      currentPrice,
-      monitorPrice,
-      'currentPrice > monitorPrice',
-      currentPrice > monitorPrice,
-    );
     return currentPrice > monitorPrice /* && previousPrice < monitorPrice */;
   }
 
@@ -163,13 +177,6 @@ export class WebsocketService implements OnModuleInit {
     currentPrice: number,
     monitorPrice: number,
   ): boolean {
-    console.log(
-      'didPriceWentDown',
-      currentPrice,
-      monitorPrice,
-      'currentPrice < monitorPrice',
-      currentPrice < monitorPrice,
-    );
     return currentPrice < monitorPrice /* && previousPrice > monitorPrice */;
   }
 
@@ -209,17 +216,34 @@ export class WebsocketService implements OnModuleInit {
           if (message.data && message.data.length) {
             const date = new Date();
 
+            const foundCrypto = cryptoList.find(
+              (s) => s.symbol.toLowerCase().indexOf(message.data[1]) > -1,
+            );
+
+            if (message.data[3] === 'binance' && foundCrypto) {
+              // TODO hacer metodo para comparar precio actual con el anterior y segun el tipo
+              self.symbols[foundCrypto.index].previousPrice = message.data[5];
+
+              self.checkPrice(self, message.data[5], foundCrypto);
+              try {
+                self.signalSymbolsService.updateSymbol({
+                  symbol: foundCrypto.symbol,
+                  price: getPriceWithCorrectDecimals(message.data[5]),
+                });
+              } catch (e) {
+                console.log('updateSymbol error ', e);
+              }
+            }
+
             // runs every 2 minutes
             if (
               self.minuteRan !== date.getUTCMinutes() &&
               date.getUTCMinutes() % 2 === 0
             ) {
               console.log('2 mintues ran');
-              const foundCrypto = cryptoList.find(
-                (s) => s.symbol.toLowerCase().indexOf(message.data[1]) > -1,
-              );
               // recalculate all signals
               self.getAllSignalSymbols().then((symbols) => {
+                self.symbols = symbols;
                 const _subscribe = {
                   eventName: 'subscribe',
                   authorization: process.env.TIINGO_KEY,
@@ -231,18 +255,6 @@ export class WebsocketService implements OnModuleInit {
                   },
                 };
                 self.wsCrypto.send(JSON.stringify(_subscribe));
-                if (message.data[3] === 'binance' && foundCrypto) {
-                  self.symbols = symbols;
-                  // TODO hacer metodo para comparar precio actual con el anterior y segun el tipo
-                  self.symbols[foundCrypto.index].previousPrice =
-                    message.data[5];
-
-                  self.checkPrice(self, message.data[5], foundCrypto);
-                  self.signalSymbolsService.updateSymbol({
-                    symbol: foundCrypto.symbol,
-                    price: getPriceWithCorrectDecimals(message.data[5]),
-                  });
-                }
 
                 const forexSymbols = [];
 
@@ -273,12 +285,16 @@ export class WebsocketService implements OnModuleInit {
                           _forex.midPrice,
                           self.symbols[index],
                         );
-                        self.signalSymbolsService.updateSymbol({
-                          symbol: realSymbol,
-                          price: getPriceWithCorrectDecimals(_forex.midPrice),
-                        });
+                        try {
+                          self.signalSymbolsService.updateSymbol({
+                            symbol: realSymbol,
+                            price: getPriceWithCorrectDecimals(_forex.midPrice),
+                          });
+                        } catch (e) {
+                          console.log('updateSymbol error ', e);
+                        }
 
-                        // TODO hacer metodo para comparar precio actual con el anterior y segun el tipo
+                        // TODO hacer metodo para comparar precio actual con el anterior y segun el tipofoundSignal
                         self.symbols[index].previousPrice = _forex.midPrice;
                       }
                     });
@@ -311,7 +327,9 @@ export class WebsocketService implements OnModuleInit {
           id: symbol.id,
           takeProfits: symbol.takeProfits.filter((tp) => !tp.takeProfitReached),
           stopLost: symbol.stopLost,
+          stopLostReached: symbol.stopLostReached,
           entryPrice: symbol.entryPrice,
+          entryPriceReached: symbol.entryPriceReached,
         });
       }
     }
