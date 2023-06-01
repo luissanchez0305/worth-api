@@ -20,9 +20,10 @@ export class SerializedSignal {
   exchangeSymbol: string;
   type: string;
   entryPrice: Decimal;
+  entryPriceReached: boolean;
   takeProfits: TakeProfit[];
   stopLost: Decimal;
-  entryPriceReached: boolean;
+  stopLostReached: boolean;
 
   constructor(partial: Partial<SerializedSignal>) {
     Object.assign(this, partial);

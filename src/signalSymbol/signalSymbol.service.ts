@@ -64,7 +64,7 @@ export class SignalSymbolsService {
       where: { symbol: symbolDto.symbol },
     });
     if (!currency) {
-      throw new Error('Currency does not exist');
+      throw new Error(`Currency does not exist: ${symbolDto.symbol}`);
     }
     return this.signalSymbolsRepository.update(currency.id, symbolDto);
   }

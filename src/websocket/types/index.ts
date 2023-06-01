@@ -10,7 +10,9 @@ export interface SymbolData {
   previousPrice?: Decimal;
   signal?: Signal;
   stopLost?: Decimal;
+  stopLostReached?: boolean;
   entryPrice?: Decimal;
+  entryPriceReached?: boolean;
   checkProfit?: TakeProfit;
   takeProfits?: TakeProfit[];
 }
