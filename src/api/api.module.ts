@@ -12,5 +12,6 @@ import { APIService } from './api.service';
     }),
   ],
   providers: [APIService],
+  exports: [APIService],
 })
 export class APIModule {}

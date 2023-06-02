@@ -6,8 +6,13 @@ import { WebSocket } from 'ws';
 import { SymbolData } from './types';
 import { APIService } from 'src/api/api.service';
 import Decimal from 'decimal.js';
-import { getPriceWithCorrectDecimals } from 'src/utils/decimalNumbers';
+import {
+  getDecimalWithCorrectDecimals,
+  getPriceWithCorrectDecimals,
+} from 'src/utils/decimalNumbers';
 import { UpdateDto } from 'src/signals/dto/update.dto';
+import { MessagesService } from 'src/messages/messages.service';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class WebsocketService implements OnModuleInit {
@@ -22,6 +27,8 @@ export class WebsocketService implements OnModuleInit {
     private readonly signalsService: SignalsService,
     private readonly signalLogsService: SignalLogsService,
     private readonly apiService: APIService,
+    private readonly messagesService: MessagesService,
+    private readonly usersService: UsersService,
   ) {}
 
   async checkPrice(_this: any, currentPrice: number, foundSignal: SymbolData) {
@@ -29,7 +36,6 @@ export class WebsocketService implements OnModuleInit {
       foundSignal.symbol,
     );
 
-    console.log('signalSymbol', currentPrice, foundSignal.stopLost);
     // --------------- CHECK FOR STOP LOST ----------------------
     if (
       signalSymbol &&
@@ -41,7 +47,13 @@ export class WebsocketService implements OnModuleInit {
         Number(foundSignal.stopLost),
       )
     ) {
-      // TODO: send notification
+      // send notification
+      this.usersService.sendSignalPushNotification(
+        'SELL',
+        foundSignal.symbol,
+        'Stop lost',
+        foundSignal.stopLost,
+      );
 
       // update signal SELL
       //    x stop lost reached
@@ -58,7 +70,14 @@ export class WebsocketService implements OnModuleInit {
         Number(foundSignal.stopLost),
       )
     ) {
-      // TODO: send notification
+      // send notification
+      this.usersService.sendSignalPushNotification(
+        'BUY',
+        foundSignal.symbol,
+        'Stop lost',
+        foundSignal.stopLost,
+      );
+
       // update signal BUY
       //    stop lost reached
       //    entry price reached
@@ -76,7 +95,14 @@ export class WebsocketService implements OnModuleInit {
         Number(foundSignal.entryPrice),
       )
     ) {
-      // TODO: send notification
+      // send notification
+      this.usersService.sendSignalPushNotification(
+        'SELL',
+        foundSignal.symbol,
+        'Entry price',
+        foundSignal.stopLost,
+      );
+
       // update signal SELL
       //    entry price reached
       foundSignal.entryPriceReached = true;
@@ -92,6 +118,13 @@ export class WebsocketService implements OnModuleInit {
       )
     ) {
       // TODO: send notification
+      this.usersService.sendSignalPushNotification(
+        'BUY',
+        foundSignal.symbol,
+        'Entry price',
+        foundSignal.stopLost,
+      );
+
       // update signal BUY
       //    entry price reached
       foundSignal.entryPriceReached = true;
@@ -121,13 +154,29 @@ export class WebsocketService implements OnModuleInit {
         }
       }
       if (reachedTP.length > 0) {
-        // TODO: send notification
+        const takeProfits = foundSignal.takeProfits.filter(
+          (tp) => reachedTP.indexOf(tp.id) > -1,
+        );
+
+        // send notification
+        this.usersService.sendSignalPushNotification(
+          'SELL',
+          foundSignal.symbol,
+          'Take profit',
+          takeProfits
+            .map((tp) => getDecimalWithCorrectDecimals(tp.price))
+            .join(', '),
+        );
 
         // update take profit
         //    take profit reached
-        foundSignal.takeProfits = foundSignal.takeProfits.filter(
-          (tp) => reachedTP.indexOf(tp.id) > -1,
-        );
+        foundSignal.takeProfits = takeProfits.map((tp) => {
+          return {
+            ...tp,
+            takeProfitReachedDate: new Date(),
+            takeProfitReached: true,
+          };
+        });
         updateSignal(_this, foundSignal, false, false, true);
       }
     } else if (foundSignal.type === 'BUY') {
@@ -152,13 +201,29 @@ export class WebsocketService implements OnModuleInit {
         }
       }
       if (reachedTP.length > 0) {
-        // TODO: send notification
+        const takeProfits = foundSignal.takeProfits.filter(
+          (tp) => reachedTP.indexOf(tp.id) > -1,
+        );
+
+        // send notification
+        this.usersService.sendSignalPushNotification(
+          'BUY',
+          foundSignal.symbol,
+          'Take profit',
+          takeProfits
+            .map((tp) => getDecimalWithCorrectDecimals(tp.price))
+            .join(', '),
+        );
 
         // update take profit
         //    take profit reached
-        foundSignal.takeProfits = foundSignal.takeProfits.filter(
-          (tp) => reachedTP.indexOf(tp.id) > -1,
-        );
+        foundSignal.takeProfits = takeProfits.map((tp) => {
+          return {
+            ...tp,
+            takeProfitReachedDate: new Date(),
+            takeProfitReached: true,
+          };
+        });
         updateSignal(_this, foundSignal, false, false, true);
       }
     }
@@ -240,7 +305,7 @@ export class WebsocketService implements OnModuleInit {
               self.minuteRan !== date.getUTCMinutes() &&
               date.getUTCMinutes() % 2 === 0
             ) {
-              console.log('2 mintues ran');
+              console.log(`websocket ack - ${date.toUTCString()}`);
               // recalculate all signals
               self.getAllSignalSymbols().then((symbols) => {
                 self.symbols = symbols;
@@ -304,6 +369,10 @@ export class WebsocketService implements OnModuleInit {
               });
 
               self.minuteRan = date.getUTCMinutes();
+            }
+          } else {
+            if (message.response && message.response.code !== 200) {
+              console.log('websocket message', message.response);
             }
           }
         } catch (e) {

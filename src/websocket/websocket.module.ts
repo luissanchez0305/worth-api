@@ -7,12 +7,16 @@ import { SignalsModule } from 'src/signals/signals.module';
 import { SignalLogsModule } from 'src/SignalLogs/signalLogs.module';
 import { APIModule } from 'src/api/api.module';
 import { APIService } from 'src/api/api.service';
+import { MessagesModule } from 'src/messages/messages.module';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
     SignalSymbolsModule,
     SignalsModule,
     SignalLogsModule,
+    MessagesModule,
+    UsersModule,
     HttpModule.register({
       timeout: 5000,
       maxRedirects: 5,

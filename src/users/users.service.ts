@@ -11,6 +11,9 @@ import { throwError } from 'rxjs';
 import { MessagesService } from 'src/messages/messages.service';
 import { DeviceDataDto } from 'src/orfanDevices/dto/deviceDataDto.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
+import Decimal from 'decimal.js';
+import { APIService } from 'src/api/api.service';
+import { getDecimalWithCorrectDecimals } from 'src/utils/decimalNumbers';
 // const SibApiV3Sdk = require('sib-api-v3-typescript');
 
 @Injectable()
@@ -21,6 +24,7 @@ export class UsersService {
     @InjectRepository(userEntity)
     private readonly userRepository: Repository<userEntity>,
     private messagesService: MessagesService,
+    private apiService: APIService,
   ) {}
 
   async getUsers() {
@@ -30,6 +34,34 @@ export class UsersService {
       },
     });
     return users.map((user) => new SerializedUser(user));
+  }
+
+  async sendSignalPushNotification(
+    type: string,
+    symbol: string,
+    action: string,
+    price: Decimal | string,
+  ) {
+    const users = (await this.getPremiumUsers()).filter(
+      (u) => u.oneSignal_id != 'NA',
+    );
+    users.forEach((user) => {
+      if (user.oneSignal_id != 'NA') {
+        this.apiService.sendPushNotification({
+          token: user.oneSignal_id,
+          sound: 'default',
+          title: 'Worth App',
+          body: `Signal: ${symbol
+            .replace('BINANCE:', '')
+            .replace('OANDA:', '')
+            .replace('_', '')} - ${type}. El precio a llegado a ${
+            typeof price === 'string'
+              ? price
+              : getDecimalWithCorrectDecimals(price)
+          } en ${action}`,
+        });
+      }
+    });
   }
 
   async createUser(userDto: CreateDto) {
@@ -85,6 +117,13 @@ export class UsersService {
     });
 
     return user;
+  }
+
+  async getPremiumUsers() {
+    const users = await this.userRepository.find({
+      where: { isPremium: true },
+    });
+    return users;
   }
 
   async updateUserEmailCode(user: userEntity) {

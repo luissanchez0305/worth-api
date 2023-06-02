@@ -64,6 +64,7 @@ export class UsersController {
     @Param('email') currentEmail: string,
   ): any {
     try {
+      console.log('userDto', userDto);
       return this.usersService.updateUser(userDto, currentEmail);
     } catch (ex) {
       return { error: ex };
