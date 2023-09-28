@@ -16,7 +16,7 @@ export class MessagesService {
     const options: MailgunMessageData = {
       from: process.env.MAILGUN_USERNAME,
       to: user.email,
-      subject: 'Test desde mailgun',
+      subject: 'Esro Worth App - Codigo de validación',
       /* text: `${user.name} ${user.lastname}, Código: ${user.emailCode}`,
       html: `<h1>Codigo de validacion</h1><p>Hola ${user.name} ${user.lastname},</p><p>Gracias por inscribirte</p>
         <p>Aqui tienes tu codigo de validación</p><p>Código: ${user.emailCode}</p>`,
